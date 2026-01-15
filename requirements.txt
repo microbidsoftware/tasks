@@ -1,0 +1,6 @@
+mysql-connector-python
+Flask
+openai
+requests
+authlib
+python-dotenv

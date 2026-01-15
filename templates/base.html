@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Manager{% endblock %}</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+        h1 { color: #333; }
+        .container { margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .completed { text-decoration: line-through; color: #888; }
+        .btn { display: inline-block; padding: 5px 10px; text-decoration: none; color: white; background-color: #28a745; border-radius: 4px; }
+        .btn-complete { background-color: #007bff; }
+        input[type="text"] { padding: 8px; width: 70%; }
+        button[type="submit"] { padding: 8px 16px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Task Management System</h1>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

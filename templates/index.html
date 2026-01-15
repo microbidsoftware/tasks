@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .task-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #fff;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .task-title {
+        cursor: pointer;
+        padding: 2px 5px;
+        border-radius: 4px;
+    }
+
+    .task-title:hover {
+        background-color: #f9f9f9;
+    }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 0 5px;
+        color: #555;
+        text-decoration: none;
+    }
+
+    .icon-btn:hover {
+        opacity: 0.8;
+    }
+
+    .edit-icon {
+        color: #ffc107;
+    }
+
+    .delete-icon {
+        color: #dc3545;
+    }
+
+    .subtask-icon {
+        color: #17a2b8;
+        font-size: 1.0em;
+        font-weight: bold;
+    }
+
+    .auth-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+</style>
+
+<div class="auth-header">
+    <h1>Task Manager</h1>
+    <div>
+        {% if user %}
+        <span>Welcome, <strong>{{ user.name }}</strong></span>
+        {% if user.picture %}
+        <img src="{{ user.picture }}" alt="Avatar"
+            style="width: 30px; border-radius: 50%; vertical-align: middle; margin: 0 5px;">
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="button" style="margin-left: 10px; color: red;">Logout</a>
+        {% else %}
+        <a href="{{ url_for('login') }}" class="button" style="font-weight: bold; color: blue;">Login with Google</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if not user %}
+<div style="text-align: center; margin-top: 50px;">
+    <h2>Please log in to manage your tasks.</h2>
+    <p>Your tasks are private and secure.</p>
+</div>
+{% else %}
+
+{# Macro for Recursive Task Rendering #}
+{% macro render_task(task, level=0) %}
+<div style="margin-left: {{ level * 30 }}px; border-left: 2px solid #eee; padding-left: 10px; margin-bottom: 5px;">
+    <div class="task-row">
+        <div style="flex-grow: 1;">
+            <span class="task-title {% if task.status == 'completed' %}completed{% endif %}"
+                ondblclick="toggleForm('edit-form-{{ task.id }}')" title="Double-click to edit">
+                {{ task.title }}
+            </span>
+
+            {# Time Display - Branch Only, Excluding Completed #}
+            <span class="badge"
+                style="font-size: 0.8em; color: #555; background: #f0f0f0; padding: 2px 5px; border-radius: 4px; margin-left: 10px;">
+                {% if task.time_minutes %}
+                {{ task.time_minutes }}m
+                {% else %}
+                -
+                {% endif %}
+                | Branch: {{ task.branch_total }}m
+            </span>
+
+            <span class="badge" style="font-size: 0.8em; color: #666; margin-left: 5px;">({{ task.status }})</span>
+
+            {# AI Suggestion #}
+            {% if task.ai_suggestion %}
+            <div style="font-size: 0.8em; color: #007bff; margin-top: 2px; font-style: italic;">
+                AI: {{ task.ai_suggestion }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 5px;">
+            {% if task.status != 'completed' %}
+            <a href="{{ url_for('complete_task', task_id=task.id) }}" class="icon-btn" title="Complete">
+                &#10003; {# Checkmark #}
+            </a>
+            {% endif %}
+
+            {# Edit Icon #}
+            <button onclick="toggleForm('edit-form-{{ task.id }}')" class="icon-btn edit-icon" title="Edit">
+                &#9998; {# Pencil #}
+            </button>
+
+            {# Delete Icon #}
+            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="icon-btn delete-icon" title="Delete"
+                onclick="return confirm('Delete task and all subtasks?');">
+                &#128465; {# Trash Bin #}
+            </a>
+
+            {# Add Subtask #}
+            <button onclick="toggleForm('subtask-form-{{ task.id }}')" class="icon-btn subtask-icon"
+                title="Add Subtask">
+                +
+            </button>
+        </div>
+    </div>
+
+    {# Edit Form (Hidden by default) #}
+    <div id="edit-form-{{ task.id }}"
+        style="display: none; margin-top: 5px; margin-left: 20px; background: #fff3cd; padding: 5px;">
+        <form action="/update_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
+            <input type="hidden" name="task_id" value="{{ task.id }}">
+            <input type="text" name="title" value="{{ task.title }}" required style="width: 200px;">
+            <input type="number" name="time_minutes" value="{{ task.time_minutes if task.time_minutes else 0 }}"
+                style="width: 60px;">
+            <button type="submit" style="font-size: 0.8em; background-color: #ffc107; color: #000;">Save</button>
+        </form>
+    </div>
+
+    {# Subtask Form (Hidden by default) #}
+    <div id="subtask-form-{{ task.id }}" style="display: none; margin-top: 5px; margin-left: 20px;">
+        <form action="/add_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
+            <input type="hidden" name="parent_id" value="{{ task.id }}">
+            <input type="text" name="title" placeholder="Subtask title" required style="width: 200px;">
+            <input type="number" name="time_minutes" placeholder="Mins" style="width: 60px;">
+            <button type="submit" style="font-size: 0.8em;">Add</button>
+        </form>
+    </div>
+
+    {# Render Children #}
+    {% if task.children %}
+    <div class="children">
+        {% for child in task.children %}
+        {{ render_task(child, level + 1) }}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+<div>
+    <h2>Add Root Task</h2>
+    <form action="/add_task" method="POST" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+        <input type="text" name="title" placeholder="Enter root task title" required style="width: 300px">
+        <input type="number" name="time_minutes" placeholder="Minutes (Optional)" style="width: 150px">
+        <button type="submit">Add Task</button>
+    </form>
+</div>
+
+<div>
+    <h2>Active Tasks</h2>
+    <div class="task-list">
+        {% for task in tasks if task.status != 'completed' %}
+        {{ render_task(task) }}
+        {% else %}
+        <p style="color: #777; font-style: italic;">No active tasks.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 20px;">
+    <h2 style="color: #555;">Completed Tasks</h2>
+    <div class="task-list" style="opacity: 0.8;">
+        {% for task in tasks if task.status == 'completed' %}
+        {{ render_task(task) }}
+        {% else %}
+        <p style="color: #777; font-style: italic;">No completed tasks yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    function toggleForm(elementId) {
+        var form = document.getElementById(elementId);
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+        } else {
+            form.style.display = 'none';
+        }
+    }
+</script>
+
+{% endif %} {# End if user #}
+{% endblock %}
