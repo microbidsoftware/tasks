@@ -54,6 +54,7 @@ def initialize_database():
             parent_id INT,
             time_minutes INT DEFAULT 0,
             ai_suggestion TEXT,
+            importance VARCHAR(50) DEFAULT 'Medium',
             user_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
@@ -62,13 +63,24 @@ def initialize_database():
         """
         cursor.execute(create_table_query)
         
-        # Check if user_id column exists in tasks (for migration)
+        # Check if user_id column exists (migration 1)
         cursor.execute("SHOW COLUMNS FROM tasks LIKE 'user_id'")
-        result = cursor.fetchone()
-        if not result:
+        if not cursor.fetchone():
             print("Adding user_id column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN user_id INT")
             cursor.execute("ALTER TABLE tasks ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE")
+
+        # Check if description column exists (migration 3)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'description'")
+        if not cursor.fetchone():
+            print("Adding description column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN description TEXT")
+
+        # Check if importance column exists (migration 2)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'importance'")
+        if not cursor.fetchone():
+            print("Adding importance column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN importance VARCHAR(50) DEFAULT 'Medium'")
 
         conn.commit()
         print("Database and tables initialized successfully.")

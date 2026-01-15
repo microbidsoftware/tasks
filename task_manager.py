@@ -7,8 +7,8 @@ class TaskManager:
     def __init__(self):
         self.ai_service = AIService()
 
-    def add_task(self, user_id, title, parent_id=None, time_minutes=0):
-        """Add a new task (or subtask) with optional time estimation."""
+    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance='Medium'):
+        """Add a new task (or subtask) with optional time estimation and importance."""
         conn = get_db_connection()
         if conn:
             try:
@@ -23,8 +23,8 @@ class TaskManager:
                 if not time_minutes:
                     time_minutes = 0
                 
-                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id) VALUES (%s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion, user_id))
+                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion, user_id, importance))
                 conn.commit()
                 print(f"Task '{title}' added successfully.")
                 return True
@@ -44,7 +44,8 @@ class TaskManager:
             try:
                 cursor = conn.cursor(dictionary=True)
                 # Sort: Pending (0) first, Completed (1) last. Then by created_at.
-                query = "SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion FROM tasks WHERE user_id = %s ORDER BY (status = 'completed') ASC, created_at ASC"
+                # Sort: Pending (0) first, Completed (1) last. Then by created_at.
+                query = "SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance FROM tasks WHERE user_id = %s ORDER BY (status = 'completed') ASC, created_at DESC"
                 cursor.execute(query, (user_id,))
                 all_tasks = cursor.fetchall()
 
@@ -151,8 +152,8 @@ class TaskManager:
                 conn.close()
         return False
 
-    def update_task(self, user_id, task_id, title=None, time_minutes=None):
-        """Update a task's title and/or time."""
+    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None):
+        """Update a task's title, time, and importance."""
         conn = get_db_connection()
         if conn:
             try:
@@ -172,6 +173,10 @@ class TaskManager:
                 if title is not None:
                     updates.append("title = %s")
                     params.append(title)
+                
+                if importance is not None:
+                    updates.append("importance = %s")
+                    params.append(importance)
                 
                 if time_minutes is not None:
                     try:

@@ -76,9 +76,10 @@ def add_task_route():
     title = request.form.get('title')
     parent_id = request.form.get('parent_id')
     time_minutes = request.form.get('time_minutes')
+    importance = request.form.get('importance', 'Medium')
     
     if title:
-        manager.add_task(user['id'], title, parent_id, time_minutes)
+        manager.add_task(user['id'], title, parent_id, time_minutes, importance)
     return redirect(url_for('index'))
 
 @app.route('/update_task', methods=['POST'])
@@ -90,9 +91,10 @@ def update_task_route():
     task_id = request.form.get('task_id')
     title = request.form.get('title')
     time_minutes = request.form.get('time_minutes')
+    importance = request.form.get('importance')
     
     if task_id:
-        manager.update_task(user['id'], task_id, title, time_minutes)
+        manager.update_task(user['id'], task_id, title, time_minutes, importance)
         
     return redirect(url_for('index'))
 
