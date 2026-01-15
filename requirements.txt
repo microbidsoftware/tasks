@@ -4,3 +4,4 @@ openai
 requests
 authlib
 python-dotenv
+gunicorn
