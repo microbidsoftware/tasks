@@ -50,6 +50,12 @@
         font-weight: bold;
     }
 
+    .icon-disabled {
+        color: #ccc !important;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .auth-header {
         display: flex;
         justify-content: space-between;
@@ -64,6 +70,14 @@
     }
 
     .ai-suggestion-container:hover .clear-ai-btn {
+        visibility: visible;
+    }
+
+    .task-actions {
+        visibility: hidden;
+    }
+
+    .task-row:hover .task-actions {
         visibility: visible;
     }
 </style>
@@ -93,7 +107,7 @@
 
 {# Macro for Recursive Task Rendering #}
 {% macro render_task(task, level=0) %}
-<div style="margin-left: {{ level * 30 }}px; border-left: 2px solid #eee; padding-left: 10px; margin-bottom: 5px;">
+<div style="margin-left: {{ level * 30 }}px; padding-left: 10px; margin-bottom: 5px;">
     <div class="task-row">
         <div style="flex-grow: 1;">
             {# Importance Badge #}
@@ -104,7 +118,7 @@
                 {{ task.importance }}
             </span>
             <span class="task-title {% if task.status == 'completed' %}completed{% endif %}"
-                ondblclick="toggleForm('edit-form-{{ task.id }}')" title="Double-click to edit">
+                onclick="toggleForm('edit-form-{{ task.id }}')" title="Click to edit">
                 {{ task.title }}
             </span>
 
@@ -116,7 +130,7 @@
                 {% else %}
                 -
                 {% endif %}
-                {% if task.children %} | Branch: {{ task.branch_total }}m{% endif %}
+                {% if task.children %} | Total: {{ task.branch_total }}m{% endif %}
             </span>
 
             {% if task.status != 'pending' %}
@@ -133,34 +147,46 @@
             </div>
             {% endif %}
         </div>
-    </div>
 
-    <div style="display: flex; align-items: center; gap: 5px;">
-        {% if task.status != 'completed' %}
-        <a href="{{ url_for('complete_task', task_id=task.id) }}" class="icon-btn" title="Complete">
-            &#10003; {# Checkmark #}
-        </a>
-        {% else %}
-        <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="icon-btn" title="Undo Completion">
-            &#8617; {# Undo (Reply arrow) #}
-        </a>
-        {% endif %}
+        <div class="task-actions" style="display: flex; align-items: center; gap: 5px;">
+            {% if task.status != 'completed' %}
+            <a href="{{ url_for('complete_task', task_id=task.id) }}" class="icon-btn" title="Complete">
+                &#10003; {# Checkmark #}
+            </a>
+            {% else %}
+            <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="icon-btn" title="Undo Completion">
+                &#8617; {# Undo (Reply arrow) #}
+            </a>
+            {% endif %}
 
-        {# Edit Icon #}
-        <button onclick="toggleForm('edit-form-{{ task.id }}')" class="icon-btn edit-icon" title="Edit">
-            &#9998; {# Pencil #}
-        </button>
+            {# Edit Icon #}
+            {% if task.status != 'completed' %}
+            <button onclick="toggleForm('edit-form-{{ task.id }}')" class="icon-btn edit-icon" title="Edit">
+                &#9998; {# Pencil #}
+            </button>
+            {% else %}
+            <button class="icon-btn icon-disabled" title="Cannot edit completed task" disabled>
+                &#9998; {# Pencil #}
+            </button>
+            {% endif %}
 
-        {# Delete Icon #}
-        <a href="{{ url_for('delete_task', task_id=task.id) }}" class="icon-btn delete-icon" title="Delete"
-            onclick="return confirm('Delete task and all subtasks?');">
-            &#128465; {# Trash Bin #}
-        </a>
+            {# Delete Icon #}
+            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="icon-btn delete-icon" title="Delete">
+                &#128465; {# Trash Bin #}
+            </a>
 
-        {# Add Subtask #}
-        <button onclick="toggleForm('subtask-form-{{ task.id }}')" class="icon-btn subtask-icon" title="Add Subtask">
-            +
-        </button>
+            {# Add Subtask #}
+            {% if task.status != 'completed' %}
+            <button onclick="toggleForm('subtask-form-{{ task.id }}')" class="icon-btn subtask-icon"
+                title="Add Subtask">
+                +
+            </button>
+            {% else %}
+            <button class="icon-btn icon-disabled" title="Cannot add subtask to completed task" disabled>
+                +
+            </button>
+            {% endif %}
+        </div>
     </div>
 </div>
 
