@@ -7,7 +7,7 @@ class TaskManager:
     def __init__(self):
         self.ai_service = AIService()
 
-    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance='Medium'):
+    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None):
         """Add a new task (or subtask) with optional time estimation and importance."""
         conn = get_db_connection()
         if conn:

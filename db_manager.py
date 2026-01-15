@@ -54,7 +54,7 @@ def initialize_database():
             parent_id INT,
             time_minutes INT DEFAULT 0,
             ai_suggestion TEXT,
-            importance VARCHAR(50) DEFAULT 'Medium',
+            importance VARCHAR(50),
             user_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
@@ -80,7 +80,7 @@ def initialize_database():
         cursor.execute("SHOW COLUMNS FROM tasks LIKE 'importance'")
         if not cursor.fetchone():
             print("Adding importance column to tasks table...")
-            cursor.execute("ALTER TABLE tasks ADD COLUMN importance VARCHAR(50) DEFAULT 'Medium'")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN importance VARCHAR(50)")
 
         conn.commit()
         print("Database and tables initialized successfully.")

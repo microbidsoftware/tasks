@@ -1,1 +1,1 @@
-ALTER TABLE tasks ADD COLUMN importance VARCHAR(50) DEFAULT 'Medium';
+ALTER TABLE tasks ADD COLUMN importance VARCHAR(50);

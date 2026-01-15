@@ -76,7 +76,7 @@ def add_task_route():
     title = request.form.get('title')
     parent_id = request.form.get('parent_id')
     time_minutes = request.form.get('time_minutes')
-    importance = request.form.get('importance', 'Medium')
+    importance = request.form.get('importance', '')
     
     if title:
         manager.add_task(user['id'], title, parent_id, time_minutes, importance)
