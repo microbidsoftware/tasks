@@ -80,6 +80,39 @@
     .task-row:hover .task-actions {
         visibility: visible;
     }
+
+    /* Hide Dropdown Menu */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #f9f9f9;
+        min-width: 120px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        border-radius: 4px;
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 8px 12px;
+        text-decoration: none;
+        display: block;
+        font-size: 0.9em;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .show {
+        display: block;
+    }
 </style>
 
 <div class="auth-header">
@@ -139,7 +172,6 @@
             <span class="badge" style="font-size: 0.8em; color: #666; margin-left: 5px;">({{ task.status }})</span>
             {% endif %}
 
-            {# AI Suggestion #}
             {% if task.ai_suggestion and task.status != 'completed' %}
             <div class="ai-suggestion-container"
                 style="font-size: 0.8em; color: #007bff; margin-top: 2px; font-style: italic; display: flex; align-items: center; justify-content: space-between;">
@@ -147,6 +179,13 @@
                 <a href="{{ url_for('clear_suggestion', task_id=task.id) }}" class="icon-btn delete-icon clear-ai-btn"
                     style="font-size: 1em; margin-left: 10px;" title="Clear Suggestion">&times;</a>
             </div>
+            {% endif %}
+
+            {# Description Display #}
+            {% if task.description %}
+            <div
+                style="display: none; font-size: 0.85em; color: #444; margin-top: 4px; white-space: pre-wrap; border-top: 1px solid #f0f0f0; padding-top: 2px;">
+                {{ task.description }}</div>
             {% endif %}
         </div>
 
@@ -188,6 +227,21 @@
                 +
             </button>
             {% endif %}
+
+            {# Hide Button #}
+            <div class="dropdown">
+                <button onclick="toggleHideMenu('hide-menu-{{ task.id }}')" class="icon-btn" title="Hide Task">
+                    &#128065; {# Eye icon #}
+                </button>
+                <div id="hide-menu-{{ task.id }}" class="dropdown-content">
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 day') }}">1 day</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='2 days') }}">2 days</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='3 days') }}">3 days</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 week') }}">1 week</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='2 weeks') }}">2 weeks</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 month') }}">1 month</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -208,6 +262,10 @@
         <input type="number" name="time_minutes" value="{{ task.time_minutes if task.time_minutes else 0 }}"
             style="width: 60px;">
         <button type="submit" style="font-size: 0.8em; background-color: #ffc107; color: #000;">Save</button>
+        <div style="display: none; width: 100%; margin-top: 5px;">
+            <textarea name="description" placeholder="Description (optional)" rows="4"
+                style="width: 100%; font-size: 0.9em;">{{ task.description if task.description else '' }}</textarea>
+        </div>
     </form>
 </div>
 
@@ -224,6 +282,10 @@
             <option value="Not important">Not important</option>
         </select>
         <button type="submit" style="font-size: 0.8em;">Add</button>
+        <div style="display: none; width: 100%; margin-top: 5px;">
+            <textarea name="description" placeholder="Subtask description (optional)" rows="3"
+                style="width: 100%; font-size: 0.9em;"></textarea>
+        </div>
     </form>
 </div>
 
@@ -254,6 +316,10 @@
         <button type="submit"
             style="border-radius: 20px; padding: 8px 20px; background-color: #28a745; color: white; border: none; cursor: pointer;">Add
             Task</button>
+        <div style="display: none; width: 100%; margin-top: 10px;">
+            <textarea name="description" placeholder="Description (optional)" rows="3"
+                style="width: 100%; border-radius: 8px; border: 1px solid #ccc; padding: 10px;"></textarea>
+        </div>
     </form>
 </div>
 
@@ -280,12 +346,33 @@
 </div>
 
 <script>
-    function toggleForm(elementId) {
-        var form = document.getElementById(elementId);
-        if (form.style.display === 'none') {
-            form.style.display = 'block';
-        } else {
-            form.style.display = 'none';
+    function toggleForm(id) {
+        const form = document.getElementById(id);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleHideMenu(id) {
+        // Close all other dropdowns
+        var dropdowns = document.getElementsByClassName("dropdown-content");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.id !== id && openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+        document.getElementById(id).classList.toggle("show");
+    }
+
+    // Close the dropdown if the user clicks outside of it
+    window.onclick = function (event) {
+        if (!event.target.matches('.icon-btn')) {
+            var dropdowns = document.getElementsByClassName("dropdown-content");
+            for (var i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
         }
     }
 </script>

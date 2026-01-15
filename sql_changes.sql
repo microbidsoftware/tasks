@@ -1,1 +1,3 @@
 ALTER TABLE tasks ADD COLUMN importance VARCHAR(50);
+ALTER TABLE tasks ADD COLUMN description TEXT;
+ALTER TABLE tasks ADD COLUMN hide_until TIMESTAMP NULL;

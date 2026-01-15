@@ -77,9 +77,10 @@ def add_task_route():
     parent_id = request.form.get('parent_id')
     time_minutes = request.form.get('time_minutes')
     importance = request.form.get('importance', '')
+    description = request.form.get('description')
     
     if title:
-        manager.add_task(user['id'], title, parent_id, time_minutes, importance)
+        manager.add_task(user['id'], title, parent_id, time_minutes, importance, description)
     return redirect(url_for('index'))
 
 @app.route('/update_task', methods=['POST'])
@@ -92,9 +93,10 @@ def update_task_route():
     title = request.form.get('title')
     time_minutes = request.form.get('time_minutes')
     importance = request.form.get('importance')
+    description = request.form.get('description')
     
     if task_id:
-        manager.update_task(user['id'], task_id, title, time_minutes, importance)
+        manager.update_task(user['id'], task_id, title, time_minutes, importance, description)
         
     return redirect(url_for('index'))
 
@@ -132,6 +134,17 @@ def clear_suggestion(task_id):
         return redirect(url_for('login'))
         
     manager.clear_ai_suggestion(user['id'], task_id)
+    return redirect(url_for('index'))
+
+@app.route('/hide_task/<int:task_id>')
+def hide_task(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+        
+    duration = request.args.get('duration')
+    if duration:
+        manager.hide_task(user['id'], task_id, duration)
     return redirect(url_for('index'))
 
 if __name__ == "__main__":

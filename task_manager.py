@@ -7,8 +7,8 @@ class TaskManager:
     def __init__(self):
         self.ai_service = AIService()
 
-    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None):
-        """Add a new task (or subtask) with optional time estimation and importance."""
+    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None, description=None):
+        """Add a new task (or subtask) with optional time estimation, importance and description."""
         conn = get_db_connection()
         if conn:
             try:
@@ -23,8 +23,8 @@ class TaskManager:
                 if not time_minutes:
                     time_minutes = 0
                 
-                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion, user_id, importance))
+                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance, description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion, user_id, importance, description))
                 conn.commit()
                 print(f"Task '{title}' added successfully.")
                 return True
@@ -44,8 +44,13 @@ class TaskManager:
             try:
                 cursor = conn.cursor(dictionary=True)
                 # Sort: Pending (0) first, Completed (1) last. Then by created_at.
-                # Sort: Pending (0) first, Completed (1) last. Then by created_at.
-                query = "SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance FROM tasks WHERE user_id = %s ORDER BY (status = 'completed') ASC, created_at DESC"
+                query = """
+                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until 
+                    FROM tasks 
+                    WHERE user_id = %s 
+                    AND (hide_until IS NULL OR hide_until <= NOW())
+                    ORDER BY (status = 'completed') ASC, created_at DESC
+                """
                 cursor.execute(query, (user_id,))
                 all_tasks = cursor.fetchall()
 
@@ -235,6 +240,46 @@ class TaskManager:
                 return True
             except Error as e:
                 print(f"Error clearing AI suggestion: {e}")
+                return False
+            finally:
+                cursor.close()
+                conn.close()
+        return False
+
+    def hide_task(self, user_id, task_id, duration_str):
+        """Make a task invisible until a certain time based on duration_str."""
+        import datetime
+        
+        now = datetime.datetime.now()
+        hide_until = None
+        
+        if duration_str == '1 day':
+            hide_until = now + datetime.timedelta(days=1)
+        elif duration_str == '2 days':
+            hide_until = now + datetime.timedelta(days=2)
+        elif duration_str == '3 days':
+            hide_until = now + datetime.timedelta(days=3)
+        elif duration_str == '1 week':
+            hide_until = now + datetime.timedelta(weeks=1)
+        elif duration_str == '2 weeks':
+            hide_until = now + datetime.timedelta(weeks=2)
+        elif duration_str == '1 month':
+            # Simplified month Calculation (30 days)
+            hide_until = now + datetime.timedelta(days=30)
+        
+        if not hide_until:
+            return False
+            
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                query = "UPDATE tasks SET hide_until = %s WHERE id = %s AND user_id = %s"
+                cursor.execute(query, (hide_until, task_id, user_id))
+                conn.commit()
+                return True
+            except Error as e:
+                print(f"Error hiding task: {e}")
                 return False
             finally:
                 cursor.close()

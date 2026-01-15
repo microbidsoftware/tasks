@@ -55,6 +55,8 @@ def initialize_database():
             time_minutes INT DEFAULT 0,
             ai_suggestion TEXT,
             importance VARCHAR(50),
+            description TEXT,
+            hide_until TIMESTAMP NULL,
             user_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
@@ -81,6 +83,12 @@ def initialize_database():
         if not cursor.fetchone():
             print("Adding importance column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN importance VARCHAR(50)")
+
+        # Check if hide_until column exists (migration 4)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'hide_until'")
+        if not cursor.fetchone():
+            print("Adding hide_until column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN hide_until TIMESTAMP NULL")
 
         conn.commit()
         print("Database and tables initialized successfully.")
