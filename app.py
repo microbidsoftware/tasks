@@ -114,6 +114,15 @@ def complete_task(task_id):
     manager.complete_task(user['id'], task_id)
     return redirect(url_for('index'))
 
+@app.route('/uncomplete/<int:task_id>')
+def uncomplete_task(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+        
+    manager.uncomplete_task(user['id'], task_id)
+    return redirect(url_for('index'))
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
 

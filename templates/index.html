@@ -119,6 +119,10 @@
             <a href="{{ url_for('complete_task', task_id=task.id) }}" class="icon-btn" title="Complete">
                 &#10003; {# Checkmark #}
             </a>
+            {% else %}
+            <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="icon-btn" title="Undo Completion">
+                &#8617; {# Undo (Reply arrow) #}
+            </a>
             {% endif %}
 
             {# Edit Icon #}

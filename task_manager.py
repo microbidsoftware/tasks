@@ -132,6 +132,25 @@ class TaskManager:
                 conn.close()
         return False
 
+    def uncomplete_task(self, user_id, task_id):
+        """Mark a task as pending (Undo completion)."""
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                # Status 'pending' is the active state
+                query = "UPDATE tasks SET status = 'pending' WHERE id = %s AND user_id = %s"
+                cursor.execute(query, (task_id, user_id))
+                conn.commit()
+                return True
+            except Error as e:
+                print(f"Error uncompleting task: {e}")
+                return False
+            finally:
+                cursor.close()
+                conn.close()
+        return False
+
     def update_task(self, user_id, task_id, title=None, time_minutes=None):
         """Update a task's title and/or time."""
         conn = get_db_connection()
