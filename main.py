@@ -3,7 +3,7 @@ from task_manager import TaskManager
 from db_manager import initialize_database
 
 def print_menu():
-    print("\nTask Manager Menu")
+    print("\nTask Manager Menu Obsolete")
     print("1. Add Task")
     print("2. List Tasks")
     print("3. Complete Task")
