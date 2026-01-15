@@ -222,3 +222,21 @@ class TaskManager:
                 cursor.close()
                 conn.close()
         return False
+
+    def clear_ai_suggestion(self, user_id, task_id):
+        """Remove the AI suggestion for a specific task."""
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                query = "UPDATE tasks SET ai_suggestion = NULL WHERE id = %s AND user_id = %s"
+                cursor.execute(query, (task_id, user_id))
+                conn.commit()
+                return True
+            except Error as e:
+                print(f"Error clearing AI suggestion: {e}")
+                return False
+            finally:
+                cursor.close()
+                conn.close()
+        return False

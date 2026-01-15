@@ -58,6 +58,14 @@
         padding-bottom: 10px;
         border-bottom: 1px solid #eee;
     }
+
+    .ai-suggestion-container .clear-ai-btn {
+        visibility: hidden;
+    }
+
+    .ai-suggestion-container:hover .clear-ai-btn {
+        visibility: visible;
+    }
 </style>
 
 <div class="auth-header">
@@ -108,15 +116,20 @@
                 {% else %}
                 -
                 {% endif %}
-                | Branch: {{ task.branch_total }}m
+                {% if task.children %} | Branch: {{ task.branch_total }}m{% endif %}
             </span>
 
+            {% if task.status != 'pending' %}
             <span class="badge" style="font-size: 0.8em; color: #666; margin-left: 5px;">({{ task.status }})</span>
+            {% endif %}
 
             {# AI Suggestion #}
             {% if task.ai_suggestion %}
-            <div style="font-size: 0.8em; color: #007bff; margin-top: 2px; font-style: italic;">
-                AI: {{ task.ai_suggestion }}
+            <div class="ai-suggestion-container"
+                style="font-size: 0.8em; color: #007bff; margin-top: 2px; font-style: italic; display: flex; align-items: center; justify-content: space-between;">
+                <span>AI: {{ task.ai_suggestion }}</span>
+                <a href="{{ url_for('clear_suggestion', task_id=task.id) }}" class="icon-btn delete-icon clear-ai-btn"
+                    style="font-size: 1em; margin-left: 10px;" title="Clear Suggestion">&times;</a>
             </div>
             {% endif %}
         </div>
@@ -191,11 +204,15 @@
 {% endmacro %}
 
 <div>
-    <h2 class="form-caption">Add Task</h2>
     <form action="/add_task" method="POST" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
         <input type="text" name="title" placeholder="Enter root task title" required style="width: 300px">
-        <input type="number" name="time_minutes" placeholder="Minutes (Optional)" style="width: 150px">
-        <button type="submit">Add Task</button>
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <input type="number" name="time_minutes" placeholder="000" style="width: 50px" min="0" max="999">
+            <span style="font-size: 0.9em; color: #666;">min</span>
+        </div>
+        <button type="submit"
+            style="border-radius: 20px; padding: 8px 20px; background-color: #28a745; color: white; border: none; cursor: pointer;">Add
+            Task</button>
     </form>
 </div>
 

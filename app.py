@@ -125,6 +125,15 @@ def uncomplete_task(task_id):
     manager.uncomplete_task(user['id'], task_id)
     return redirect(url_for('index'))
 
+@app.route('/clear_suggestion/<int:task_id>')
+def clear_suggestion(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+        
+    manager.clear_ai_suggestion(user['id'], task_id)
+    return redirect(url_for('index'))
+
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
 
