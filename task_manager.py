@@ -157,8 +157,8 @@ class TaskManager:
                 conn.close()
         return False
 
-    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None):
-        """Update a task's title, time, and importance."""
+    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None, description=None):
+        """Update a task's details."""
         conn = get_db_connection()
         if conn:
             try:
@@ -182,6 +182,10 @@ class TaskManager:
                 if importance is not None:
                     updates.append("importance = %s")
                     params.append(importance)
+
+                if description is not None:
+                    updates.append("description = %s")
+                    params.append(description)
                 
                 if time_minutes is not None:
                     try:
