@@ -136,6 +136,29 @@ def clear_suggestion(task_id):
     manager.clear_ai_suggestion(user['id'], task_id)
     return redirect(url_for('index'))
 
+@app.route('/remove_suggestion_item/<int:task_id>')
+def remove_suggestion_item(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
+    text = request.args.get('text')
+    if text:
+        manager.remove_ai_suggestion_item(user['id'], task_id, text)
+    return redirect(url_for('index'))
+
+@app.route('/toggle_suggestion_item/<int:task_id>')
+def toggle_suggestion_item(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
+    text = request.args.get('text')
+    if text:
+        manager.toggle_ai_suggestion_item(user['id'], task_id, text)
+    return redirect(url_for('index'))
+
+
 @app.route('/hide_task/<int:task_id>')
 def hide_task(task_id):
     user = session.get('user')

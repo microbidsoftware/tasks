@@ -23,13 +23,16 @@
     }
 
     .icon-btn {
-        background: none;
+        background: transparent;
         border: none;
         cursor: pointer;
-        font-size: 1.2em;
-        padding: 0 5px;
+        padding: 0 4px;
         color: #555;
         text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        outline: none;
     }
 
     .icon-btn:hover {
@@ -174,10 +177,50 @@
 
             {% if task.ai_suggestion and task.status != 'completed' %}
             <div class="ai-suggestion-container"
-                style="font-size: 0.8em; color: #007bff; margin-top: 2px; font-style: italic; display: flex; align-items: center; justify-content: space-between;">
-                <span>AI: {{ task.ai_suggestion }}</span>
+                style="font-size: 0.85em; color: #0056b3; margin-top: 5px; background: #f8fbff; padding: 8px; border-radius: 6px; border-left: 3px solid #007bff; display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex-grow: 1;">
+                    {% if task.ai_suggestion is string %}
+                    <span style="font-style: italic;">AI: {{ task.ai_suggestion }}</span>
+                    {% else %}
+                    <ul style="margin: 0; padding-left: 15px; list-style-type: circle;">
+                        {% for item in task.ai_suggestion %}
+                        {# Handle both legacy strings and new objects #}
+                        {% set item_text = item.text if item is mapping else item %}
+                        {% set is_done = item.done if item is mapping else false %}
+                        <li
+                            style="margin-bottom: 4px; display: flex; align-items: start; justify-content: space-between;">
+                            <span
+                                style="flex-grow: 1; {% if is_done %}text-decoration: line-through; color: #999;{% endif %}">{{
+                                item_text }}</span>
+                            <div style="display: flex; gap: 4px; margin-left: 10px; align-items: center;">
+                                {# Toggle/Checkmark Icon #}
+                                <a href="{{ url_for('toggle_suggestion_item', task_id=task.id, text=item_text) }}"
+                                    class="icon-btn" style="color: #007bff; font-size: 1.1em;" title="Mark as Done">
+                                    {% if is_done %}&#9111;{% else %}&#10003;{% endif %}
+                                </a>
+
+                                {# Add as Subtask Icon #}
+                                <form action="/add_task" method="POST" style="display: inline;">
+                                    <input type="hidden" name="parent_id" value="{{ task.id }}">
+                                    <input type="hidden" name="title" value="{{ item_text }}">
+                                    <button type="submit" class="icon-btn"
+                                        style="color: #28a745; font-weight: bold; font-size: 1.2em; background: transparent;"
+                                        title="Add as subtask">+</button>
+                                </form>
+
+                                {# Remove Item Icon #}
+                                <a href="{{ url_for('remove_suggestion_item', task_id=task.id, text=item_text) }}"
+                                    class="icon-btn" style="color: #dc3545; font-size: 1.0em;"
+                                    title="Remove Suggestion">&times;</a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
                 <a href="{{ url_for('clear_suggestion', task_id=task.id) }}" class="icon-btn delete-icon clear-ai-btn"
-                    style="font-size: 1em; margin-left: 10px;" title="Clear Suggestion">&times;</a>
+                    style="font-size: 1.5em; margin-left: 15px; line-height: 1; color: #aaa; align-self: center;"
+                    title="Clear All Suggestions">&times;&times;</a>
             </div>
             {% endif %}
 

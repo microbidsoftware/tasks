@@ -1,4 +1,5 @@
 from db_manager import get_db_connection
+import json
 from mysql.connector import Error
 
 from ai_service import AIService
@@ -13,7 +14,8 @@ class TaskManager:
         if conn:
             try:
                 # Call AI
-                ai_suggestion = self.ai_service.get_task_suggestion(title)
+                ai_suggestions = self.ai_service.get_task_suggestion(title)
+                ai_suggestion_json = json.dumps(ai_suggestions) if ai_suggestions else None
                 
                 cursor = conn.cursor()
                 if parent_id == '' or parent_id == 'None':
@@ -24,7 +26,7 @@ class TaskManager:
                     time_minutes = 0
                 
                 query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance, description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion, user_id, importance, description))
+                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion_json, user_id, importance, description))
                 conn.commit()
                 print(f"Task '{title}' added successfully.")
                 return True
@@ -60,6 +62,12 @@ class TaskManager:
                    task['children'] = []
                    task['own_time'] = task['time_minutes'] if task['time_minutes'] else 0
                    task['branch_total'] = 0 # Will be calculated
+
+                   if task['ai_suggestion']:
+                       try:
+                           task['ai_suggestion'] = json.loads(task['ai_suggestion'])
+                       except (json.JSONDecodeError, TypeError):
+                           pass
                 
                 # Link children to parents
                 root_tasks = []
@@ -126,7 +134,7 @@ class TaskManager:
                 
                 # 2. Update all of them
                 format_strings = ','.join(['%s'] * len(ids_to_complete))
-                query = f"UPDATE tasks SET status = 'completed' WHERE id IN ({format_strings})"
+                query = f"UPDATE tasks SET status = 'completed', completed_at = NOW() WHERE id IN ({format_strings})"
                 cursor.execute(query, tuple(ids_to_complete))
                 conn.commit()
                 return True
@@ -145,7 +153,7 @@ class TaskManager:
             try:
                 cursor = conn.cursor()
                 # Status 'pending' is the active state
-                query = "UPDATE tasks SET status = 'pending' WHERE id = %s AND user_id = %s"
+                query = "UPDATE tasks SET status = 'pending', completed_at = NULL WHERE id = %s AND user_id = %s"
                 cursor.execute(query, (task_id, user_id))
                 conn.commit()
                 return True
@@ -232,8 +240,10 @@ class TaskManager:
                 conn.close()
         return False
 
+        return False
+
     def clear_ai_suggestion(self, user_id, task_id):
-        """Remove the AI suggestion for a specific task."""
+        """Remove the entire AI suggestion for a specific task."""
         conn = get_db_connection()
         if conn:
             try:
@@ -249,6 +259,66 @@ class TaskManager:
                 cursor.close()
                 conn.close()
         return False
+
+    def remove_ai_suggestion_item(self, user_id, task_id, item_text):
+        """Remove a specific item from the AI suggestion list."""
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT ai_suggestion FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
+                row = cursor.fetchone()
+                if row and row['ai_suggestion']:
+                    suggestions = json.loads(row['ai_suggestion'])
+                    if isinstance(suggestions, list):
+                        # Handle legacy strings and new objects
+                        new_suggestions = []
+                        for s in suggestions:
+                            text = s['text'] if isinstance(s, dict) else s
+                            if text != item_text:
+                                new_suggestions.append(s)
+                        
+                        query = "UPDATE tasks SET ai_suggestion = %s WHERE id = %s AND user_id = %s"
+                        cursor.execute(query, (json.dumps(new_suggestions), task_id, user_id))
+                        conn.commit()
+                        return True
+            except (Error, json.JSONDecodeError) as e:
+                print(f"Error removing AI item: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+        return False
+
+    def toggle_ai_suggestion_item(self, user_id, task_id, item_text):
+        """Toggle the completion status of a specific suggestion item."""
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT ai_suggestion FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
+                row = cursor.fetchone()
+                if row and row['ai_suggestion']:
+                    suggestions = json.loads(row['ai_suggestion'])
+                    if isinstance(suggestions, list):
+                        for s in suggestions:
+                            if isinstance(s, dict) and s['text'] == item_text:
+                                s['done'] = not s.get('done', False)
+                            elif isinstance(s, str) and s == item_text:
+                                # Convert legacy string to object on toggle
+                                index = suggestions.index(s)
+                                suggestions[index] = {"text": s, "done": True}
+                        
+                        query = "UPDATE tasks SET ai_suggestion = %s WHERE id = %s AND user_id = %s"
+                        cursor.execute(query, (json.dumps(suggestions), task_id, user_id))
+                        conn.commit()
+                        return True
+            except (Error, json.JSONDecodeError) as e:
+                print(f"Error toggling AI item: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+        return False
+
 
     def hide_task(self, user_id, task_id, duration_str):
         """Make a task invisible until a certain time based on duration_str."""

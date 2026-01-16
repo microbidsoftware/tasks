@@ -1,0 +1,2 @@
+Let's add a under each task which is more than one day open, show a line of 4 pixels lenght. 
+For each day to add small element to show visual presentation of days the task is open.

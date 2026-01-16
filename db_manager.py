@@ -57,6 +57,7 @@ def initialize_database():
             importance VARCHAR(50),
             description TEXT,
             hide_until TIMESTAMP NULL,
+            completed_at TIMESTAMP NULL,
             user_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
@@ -89,6 +90,12 @@ def initialize_database():
         if not cursor.fetchone():
             print("Adding hide_until column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN hide_until TIMESTAMP NULL")
+
+        # Check if completed_at column exists (migration 5)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'completed_at'")
+        if not cursor.fetchone():
+            print("Adding completed_at column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN completed_at TIMESTAMP NULL")
 
         conn.commit()
         print("Database and tables initialized successfully.")
