@@ -3,19 +3,25 @@ import json
 from mysql.connector import Error
 
 from ai_service import AIService
+from tag_utils import extract_tags_from_text, strip_tags_from_text
+from ctask import CTask
+from info_panel_manager import InfoPanelManager
+from search_manager import SearchManager
 
 class TaskManager:
     def __init__(self):
         self.ai_service = AIService()
 
-    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None, description=None):
-        """Add a new task (or subtask) with optional time estimation, importance and description."""
+    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None, description=None, run_ai=True, due_at=None):
+        """Add a new task (or subtask) with optional time estimation, importance, description, and due time."""
         conn = get_db_connection()
         if conn:
             try:
                 # Call AI
-                ai_suggestions = self.ai_service.get_task_suggestion(title)
-                ai_suggestion_json = json.dumps(ai_suggestions) if ai_suggestions else None
+                ai_suggestion_json = None
+                if run_ai:
+                    ai_suggestions = self.ai_service.get_task_suggestion(title)
+                    ai_suggestion_json = json.dumps(ai_suggestions) if ai_suggestions else None
                 
                 cursor = conn.cursor()
                 if parent_id == '' or parent_id == 'None':
@@ -25,9 +31,23 @@ class TaskManager:
                 if not time_minutes:
                     time_minutes = 0
                 
-                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance, description) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion_json, user_id, importance, description))
+                # Handle Tags
+                tags_to_add = extract_tags_from_text(title)
+                
+                # Clean title before saving
+                title = strip_tags_from_text(title)
+                
+                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance, description, due_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion_json, user_id, importance, description, due_at))
                 conn.commit()
+                task_id = cursor.lastrowid
+                
+                # Handle Tags
+                if tags_to_add:
+                    ctask = CTask(user_id, task_id)
+                    for tag in tags_to_add:
+                        ctask.add_tag(tag)
+
                 print(f"Task '{title}' added successfully.")
                 return True
             except Error as e:
@@ -38,8 +58,8 @@ class TaskManager:
                 conn.close()
         return False
 
-    def list_tasks(self, user_id):
-        """List all tasks in a hierarchy with calculated sibling branch totals."""
+    def list_tasks(self, user_id, search_query=None, tag_filter=None, importance_filter=None, period_filter=None):
+        """List tasks in a hierarchy, optionally filtered by search query, tag, importance, or period."""
         conn = get_db_connection()
         tasks_tree = []
         if conn:
@@ -47,7 +67,7 @@ class TaskManager:
                 cursor = conn.cursor(dictionary=True)
                 # Sort: Pending (0) first, Completed (1) last. Then by created_at.
                 query = """
-                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until 
+                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at 
                     FROM tasks 
                     WHERE user_id = %s 
                     AND (hide_until IS NULL OR hide_until <= NOW())
@@ -57,17 +77,39 @@ class TaskManager:
                 all_tasks = cursor.fetchall()
 
                 # --- 1. Build Tree Structure ---
+                # Fetch all tags for all user tasks to avoid N+1 problem
+                cursor.execute("""
+                    SELECT tt.task_id, t.id, t.name 
+                    FROM tags t
+                    JOIN task_tags tt ON t.id = tt.tag_id
+                    WHERE t.user_id = %s
+                """, (user_id,))
+                all_tags_raw = cursor.fetchall()
+                task_tags_map = {}
+                for row in all_tags_raw:
+                    tid = row['task_id']
+                    if tid not in task_tags_map:
+                        task_tags_map[tid] = []
+                    task_tags_map[tid].append({'id': row['id'], 'name': row['name']})
+
                 tasks_map = {task['id']: task for task in all_tasks}
                 for task in all_tasks:
                    task['children'] = []
                    task['own_time'] = task['time_minutes'] if task['time_minutes'] else 0
                    task['branch_total'] = 0 # Will be calculated
+                   task['tags'] = task_tags_map.get(task['id'], [])
 
                    if task['ai_suggestion']:
                        try:
                            task['ai_suggestion'] = json.loads(task['ai_suggestion'])
                        except (json.JSONDecodeError, TypeError):
                            pass
+                
+                # --- 1.5 Apply Filters if provided ---
+                if search_query or tag_filter or importance_filter or period_filter:
+                    all_tasks = SearchManager.filter_tasks(all_tasks, search_query, tag_filter, importance_filter, period_filter)
+                    # Rebuild maps with filtered tasks
+                    tasks_map = {task['id']: task for task in all_tasks}
                 
                 # Link children to parents
                 root_tasks = []
@@ -95,13 +137,17 @@ class TaskManager:
                     calculate_branch_total(task)
 
                 tasks_tree = root_tasks
+                
+                # Calculate Summary Stats
+                stats = InfoPanelManager.calculate_stats(all_tasks)
+                return tasks_tree, stats
                         
             except Error as e:
                 print(f"Error listing tasks: {e}")
             finally:
                 cursor.close()
                 conn.close()
-        return tasks_tree
+        return [], {}
 
     def complete_task(self, user_id, task_id):
         """Mark a task AND all its descendants as completed."""
@@ -165,7 +211,7 @@ class TaskManager:
                 conn.close()
         return False
 
-    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None, description=None):
+    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None, description=None, due_at=None):
         """Update a task's details."""
         conn = get_db_connection()
         if conn:
@@ -183,7 +229,13 @@ class TaskManager:
                 updates = []
                 params = []
                 
+                tags_to_add = []
                 if title is not None:
+                    # Extract tags before cleaning title
+                    tags_to_add = extract_tags_from_text(title)
+                    # Clean title
+                    title = strip_tags_from_text(title)
+                    
                     updates.append("title = %s")
                     params.append(title)
                 
@@ -203,6 +255,14 @@ class TaskManager:
                     except (ValueError, TypeError):
                         pass
 
+                if due_at is not None:
+                    # Expecting due_at to be a string in ISO format or None to clear
+                    if due_at == '':
+                        updates.append("due_at = NULL")
+                    else:
+                        updates.append("due_at = %s")
+                        params.append(due_at)
+
                 if not updates:
                     return True
                 
@@ -211,6 +271,13 @@ class TaskManager:
                 
                 cursor.execute(query, tuple(params))
                 conn.commit()
+
+                # Handle Tags
+                if tags_to_add:
+                    ctask = CTask(user_id, task_id)
+                    for tag in tags_to_add:
+                        ctask.add_tag(tag)
+
                 print(f"Task {task_id} updated.")
                 return True
             except Error as e:
@@ -319,6 +386,46 @@ class TaskManager:
                 conn.close()
         return False
 
+    def edit_ai_suggestion_item(self, user_id, task_id, old_text, new_text, new_time=None):
+        """Update the text and optionally time of a specific suggestion item."""
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT ai_suggestion FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
+                row = cursor.fetchone()
+                if row and row['ai_suggestion']:
+                    suggestions = json.loads(row['ai_suggestion'])
+                    if isinstance(suggestions, list):
+                        updated = False
+                        for s in suggestions:
+                            text = s['text'] if isinstance(s, dict) else s
+                            if text == old_text:
+                                if isinstance(s, dict):
+                                    s['text'] = new_text
+                                    if new_time is not None:
+                                        try:
+                                            s['time'] = int(new_time)
+                                        except (ValueError, TypeError):
+                                            pass
+                                else:
+                                    # Convert legacy string to object
+                                    index = suggestions.index(s)
+                                    suggestions[index] = {"text": new_text, "done": False, "time": new_time if new_time is not None else 0}
+                                updated = True
+                                break
+                        
+                        if updated:
+                            query = "UPDATE tasks SET ai_suggestion = %s WHERE id = %s AND user_id = %s"
+                            cursor.execute(query, (json.dumps(suggestions), task_id, user_id))
+                            conn.commit()
+                            return True
+            except (Error, json.JSONDecodeError) as e:
+                print(f"Error editing AI item: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+        return False
 
     def hide_task(self, user_id, task_id, duration_str):
         """Make a task invisible until a certain time based on duration_str."""

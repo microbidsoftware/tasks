@@ -1,0 +1,91 @@
+
+tags functionality should be added
+1) tags are one-word entities, starting from #, such as #1 or #health
+2) when title of the task is entered, or edited, text shoudl be analyzed for tags
+3) write special function "extract_tags_from_text" which returns tags
+4) put this function in separate file
+5) tags will be stored in special table, and will be unique per user. 
+6) so, if such tag exists for user, it's used, if not, it's created.
+7) one task can be related to any amount of tags
+8) tags are listed after task name at and next to each tag there is button X, when pressed tag is immediately removed from tasks  
+9) all operation with addding tags should be performed on a new class, named CTask, which will have function add_tag, remove_tag, get_tags
+10) class CTask will be located in a separate file and will be initialized with user_id, and task_id, and will have in memory all the fields of task record in the database
+
+when a task is saved, the tags should be removed from the text, so if original task title, for example, was "take a shower #health", then "health" tag created, but the task saved without text element "#health", as it was part of the task's title but rather a directive to create or use tag while creating the task 
+also, when displaying tags, not need in "#" so the displayed tag should be just "health". 
+# is just character for a separation, not part of a tag's name 
+
+UI Modification for suggested steps 
+
+for each suggested step of a new task
+1) when clicked on the text of a suggested step, make this text editable, preferrably right in the spot where it is displayed,   with small "Save" and "Cancel" buttons. In this case Enter serves as Save, ESC as cancel. 
+2) modify prompt to suggest also estimated time for suggested steps, that will be also displayed next to the text of the suggested step 
+3) suggested step will also have a icon to save  next to it, which will save this suggested step as a real step of the task, without asking for suggested steps for this new subtask.
+
+
+In the top section of the screen make information panel, which will show 
+1) Total time of all tasks (including subtasks)
+2) Total time of all tasks based on importance for each level of importance.
+3) total time of all taks (including subtasks) for each tag. 
+calculate this information on the fly, when the screen is loaded, and when a task is added, edited or deleted. 
+use this information to display it in the information panel.   
+make this information panel collapsible, so it can be hidden and shown by clicking on it. 
+keep all functions in separate file clearily Separated from the main file and indicating that it has all the functions for the information panel. 
+
+when calculating total time of all tasks, include time of all subtasks. I will clarify:
+when task is set as "important", then not only it's own time counted for dashboard, but also time of all it's subtasks, even if each subtask is not set as "important"
+the same principle applies to tags: if a task is related to a tag, then this tag's total time is counted for dashboard, even if the subtasks which are attributing to the time, are not marked with this tag
+
+
+Search and filtering functionality
+1) add search bar at the top of the screen, which will allow to search for tasks by title, tags, importance
+2) add filtering functionality, which will allow to filter tasks by  tags, impaortance
+3) keep all search and filtering functionality in separate file clearily Separated from the main file and indicating that it has all the functions for the search and filtering functionality. 
+
+Instead of having information panel always present, like we have now (yet foldable).
+we will have a separate page for information panel, and it will be opened by clicking on "Information" Item in the menu "Settings"
+Add  icon  "Settings"  next to login name and "Logout" link in the top right corner of the screen, and item "Information" in the menu "Settings".
+
+
+UX Specific for this implementation:
+Currently search and filter are taking two lines, should all fit all in one line, with search button as just an icon of search
+It's still taking two lines, reduce drastically the lenght of main search element and make thr button search grey instead of green. 
+
+Top area tweaks:
+1) there is like 1 cm of vertical empty space at the top of the screen, remove it.
+2) button settings has not just an icon, but also text "Settings", remove text and keep only icon.
+
+Top Area tweak
+currently  there is following order - top area with welcome and logout line, then big empty space, in the middle of empty space is horizontal line,then search bar
+remove big empty space and horizontal line
+
+Let's add a functionality of setting time.
+Currently the tasks do not have any time to be done at. 
+Let's add a button with clock next to the title field, on both adding and editing tasks. 
+Opening it will TaskTimeSet Dialog, which will allow to set time for the task. 
+It will have a calendar and a time picker, and a save button.
+Add necessary fields to the database to store this information. 
+Change a calendar to have it open, built-in in the window, no need for setting up time in dd/mm/yyyy format 
+When the time selected in the time selection window, it should appear next to clock icon
+If the time is not picked up, do not show it, doesn't make sense to show 00:00. 
+The date show in format D Month YY, except "Today" and "Tomorrow", which shown by these words
+
+Now yellow strip with date includes also icon of the clock. That way icon is present twice, once clickable, as a a separate button and second time next to the date. We don't need to have a second time. After the date or time had been picked up, this area should also become selectable exactly like a button for selecting a time.
+change the month format to 3 letters, for example, Jan, Feb, Mar, etc.
+
+Make a left column, and in this column to make following filters: Today, Tomorrow, Next Week, All. When clicking on them, the tasks should be filtered accordingly.  
+These filters will be called "Period Selection Filters"
+TOday means also overdue tasks, but doesn't include tasks without due date. 
+Tomorrow means tasks with due date tomorrow, but doesn't include tasks without due date. 
+Next Week means tasks with due date in the next week, but doesn't include tasks without due date. 
+All means all tasks, including tasks without due date. 
+
+Beneath of these filters, make a list of all tags, and make it collapsible. 
+This area woll be called Tags Selection Filters. 
+Tags clicked will perform a search for tasks with this tag, disregarding the period selection filters, overceeding them.
+At this case in the main area should be displayed only tasks with this tag, including their subtasks. 
+
+ERROR: There is some error with the implementation of the filters.
+1)  When I log first time, I see a lot of tasks including those tasks that were added some time before, even before date a field was added. Basically I see all the task. 
+This view, theoretically, should not be changed if I select all in a period selection, but practically selecting all has only very few records with today and tomorrow, and definitely doesn't show all of the records.
+2) there is another problem with the selection of next week. Next week means that not the current week but the next one. Still, when I click on that, it shows today and tomorrow's events.

@@ -40,7 +40,9 @@ class AIService:
             print(f"Sending OpenAI request for task: '{task_title}'")
             sys.stdout.flush()
             
-            prompt = f"I am planning a task: '{task_title}'. Provide 3-5 short, actionable sub-steps or pieces of advice to resolve this task. Do not include obvious or trivial steps. Return a JSON object with a key 'suggested_subtasks' which is an array of strings. Keep each item under 30 words."
+            prompt = f"I am planning a task: '{task_title}'. Provide 3-5 short, actionable sub-steps or pieces of advice to resolve this task. Think deeply, try to use NLP systems and methods to improve results make it's motivational oriented, emphesize easiness of the step and make the task more attractive to start and easy to fulfill take into account the context of the task and you can include obvious or trivial steps. Return a JSON object with a key 'suggested_subtasks' which is an array of objects, each containing 'text' (under 30 words) and 'estimated_time' (in minutes, as an integer)."
+            print(f"Prompt: {prompt}")
+            sys.stdout.flush()
             
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -48,23 +50,33 @@ class AIService:
                     {"role": "system", "content": "You are a helpful productivity assistant. You are dealing gently with someone who has procrastination and needs minimal first steps to start. You MUST return JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=200,
+                max_tokens=300,
                 response_format={"type": "json_object"}
             )
             
             content = response.choices[0].message.content.strip()
-            print(f"OpenAI Response received: {content[:50]}...")
+            print(f"OpenAI Response received: {content[:100]}...")
             sys.stdout.flush()
             
             try:
                 data = json.loads(content)
                 suggestions = data.get('suggested_subtasks', [])
                 if isinstance(suggestions, list):
-                    # Convert to objects with status
-                    return [{"text": s, "done": False} for s in suggestions if isinstance(s, str)]
-                return [{"text": content, "done": False}] # Fallback if not a list
+                    # Convert to objects with status, text and time
+                    result = []
+                    for s in suggestions:
+                        if isinstance(s, dict):
+                            result.append({
+                                "text": s.get('text', ''),
+                                "time": s.get('estimated_time', 0),
+                                "done": False
+                            })
+                        elif isinstance(s, str):
+                            result.append({"text": s, "time": 0, "done": False})
+                    return result
+                return [{"text": content, "time": 0, "done": False}] # Fallback
             except json.JSONDecodeError:
-                return [{"text": content, "done": False}] # Fallback if not JSON
+                return [{"text": content, "time": 0, "done": False}] # Fallback
         except Exception as e:
             print(f"OpenAI API Error: {e}")
             sys.stdout.flush()

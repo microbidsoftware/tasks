@@ -58,6 +58,7 @@ def initialize_database():
             description TEXT,
             hide_until TIMESTAMP NULL,
             completed_at TIMESTAMP NULL,
+            due_at TIMESTAMP NULL,
             user_id INT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
@@ -65,6 +66,29 @@ def initialize_database():
         )
         """
         cursor.execute(create_table_query)
+
+        create_tags_table_query = """
+        CREATE TABLE IF NOT EXISTS tags (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            user_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_tag_user (name, user_id),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+        """
+        cursor.execute(create_tags_table_query)
+
+        create_task_tags_table_query = """
+        CREATE TABLE IF NOT EXISTS task_tags (
+            task_id INT NOT NULL,
+            tag_id INT NOT NULL,
+            PRIMARY KEY (task_id, tag_id),
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+            FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+        )
+        """
+        cursor.execute(create_task_tags_table_query)
         
         # Check if user_id column exists (migration 1)
         cursor.execute("SHOW COLUMNS FROM tasks LIKE 'user_id'")
@@ -96,6 +120,12 @@ def initialize_database():
         if not cursor.fetchone():
             print("Adding completed_at column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN completed_at TIMESTAMP NULL")
+
+        # Check if due_at column exists (migration 6)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'due_at'")
+        if not cursor.fetchone():
+            print("Adding due_at column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN due_at TIMESTAMP NULL")
 
         conn.commit()
         print("Database and tables initialized successfully.")

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .info-panel {
+        background: #fdfdfd;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-top: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .info-panel-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        font-weight: bold;
+        color: #444;
+        font-size: 1.2em;
+    }
+
+    .info-panel-content {
+        padding: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    .info-group {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .info-group h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 1em;
+        text-transform: uppercase;
+        color: #888;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 5px;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 1.05em;
+    }
+
+    .stat-label {
+        color: #555;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        color: #222;
+    }
+
+    .back-nav {
+        margin-top: 20px;
+    }
+
+    .auth-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="auth-header">
+    <h1>Dashboard & Statistics</h1>
+    <div class="back-nav">
+        <a href="{{ url_for('index') }}" class="button">&larr; Back to Tasks</a>
+    </div>
+</div>
+
+<div class="info-panel">
+    <div class="info-panel-header">
+        <span>Information Summary</span>
+    </div>
+    <div class="info-panel-content">
+        <div class="info-group">
+            <h3>Overview</h3>
+            <div class="stat-item">
+                <span class="stat-label">Total Time Pending:</span>
+                <span class="stat-value">{{ stats.total_time or 0 }}m</span>
+            </div>
+        </div>
+
+        <div class="info-group">
+            <h3>By Importance</h3>
+            {% for imp, time in stats.importance_summary.items() %}
+            {% if time > 0 or imp in ['Important', 'Medium', 'Normal'] %}
+            <div class="stat-item">
+                <span class="stat-label">{{ imp }}:</span>
+                <span class="stat-value">{{ time }}m</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="info-group">
+            <h3>By Tag</h3>
+            {% if stats.tag_summary %}
+            {% for tag, time in stats.tag_summary.items() %}
+            <div class="stat-item">
+                <span class="stat-label">#{{ tag }}:</span>
+                <span class="stat-value">{{ time }}m</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="color: #999; font-style: italic; font-size: 0.9em;">No tags active</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

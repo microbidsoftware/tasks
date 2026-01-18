@@ -38,8 +38,25 @@ def index():
     if not user:
         return render_template('index.html', user=None, tasks=[])
     
-    tasks = manager.list_tasks(user['id'])
-    return render_template('index.html', user=user, tasks=tasks)
+    search_query = request.args.get('q')
+    tag_filter = request.args.get('tag')
+    importance_filter = request.args.get('importance')
+    period_filter = request.args.get('period')
+    
+    tasks_tree, stats = manager.list_tasks(user['id'], search_query, tag_filter, importance_filter, period_filter)
+    
+    return render_template('index.html', user=user, tasks=tasks_tree, stats=stats, 
+                           current_q=search_query, current_tag=tag_filter, 
+                           current_importance=importance_filter, current_period=period_filter)
+
+@app.route('/dashboard')
+def dashboard():
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
+    tasks_tree, stats = manager.list_tasks(user['id'])
+    return render_template('dashboard.html', user=user, stats=stats)
 
 @app.route('/login')
 def login():
@@ -78,9 +95,14 @@ def add_task_route():
     time_minutes = request.form.get('time_minutes')
     importance = request.form.get('importance', '')
     description = request.form.get('description')
+    run_ai = request.form.get('run_ai', 'true') != 'false'
+    due_at = request.form.get('due_at')
     
+    if not due_at:
+        due_at = None
+
     if title:
-        manager.add_task(user['id'], title, parent_id, time_minutes, importance, description)
+        manager.add_task(user['id'], title, parent_id, time_minutes, importance, description, run_ai=run_ai, due_at=due_at)
     return redirect(url_for('index'))
 
 @app.route('/update_task', methods=['POST'])
@@ -94,9 +116,10 @@ def update_task_route():
     time_minutes = request.form.get('time_minutes')
     importance = request.form.get('importance')
     description = request.form.get('description')
+    due_at = request.form.get('due_at')
     
     if task_id:
-        manager.update_task(user['id'], task_id, title, time_minutes, importance, description)
+        manager.update_task(user['id'], task_id, title, time_minutes, importance, description, due_at=due_at)
         
     return redirect(url_for('index'))
 
@@ -158,6 +181,20 @@ def toggle_suggestion_item(task_id):
         manager.toggle_ai_suggestion_item(user['id'], task_id, text)
     return redirect(url_for('index'))
 
+@app.route('/edit_suggestion_item/<int:task_id>', methods=['POST'])
+def edit_suggestion_item(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
+    old_text = request.form.get('old_text')
+    new_text = request.form.get('new_text')
+    new_time = request.form.get('new_time')
+    
+    if old_text and new_text:
+        manager.edit_ai_suggestion_item(user['id'], task_id, old_text, new_text, new_time)
+    return redirect(url_for('index'))
+
 
 @app.route('/hide_task/<int:task_id>')
 def hide_task(task_id):
@@ -168,6 +205,17 @@ def hide_task(task_id):
     duration = request.args.get('duration')
     if duration:
         manager.hide_task(user['id'], task_id, duration)
+    return redirect(url_for('index'))
+
+@app.route('/remove_tag/<int:task_id>/<int:tag_id>')
+def remove_tag(task_id, tag_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
+    from ctask import CTask
+    ctask = CTask(user['id'], task_id)
+    ctask.remove_tag(tag_id)
     return redirect(url_for('index'))
 
 if __name__ == "__main__":

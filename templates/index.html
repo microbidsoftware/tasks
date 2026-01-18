@@ -63,9 +63,14 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
+        margin: 0;
+        padding: 5px 0;
+        border-bottom: none;
+    }
+
+    .auth-header h1 {
+        margin: 0;
+        font-size: 1.5em;
     }
 
     .ai-suggestion-container .clear-ai-btn {
@@ -116,236 +121,719 @@
     .show {
         display: block;
     }
+
+    .tag-badge {
+        display: inline-flex;
+        align-items: center;
+        background-color: #e2f0d9;
+        color: #385723;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin-left: 5px;
+        border: 1px solid #c5e0b4;
+    }
+
+    .tag-remove {
+        margin-left: 5px;
+        color: #c00000;
+        text-decoration: none;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0 2px;
+    }
+
+    .tag-remove:hover {
+        color: #ff0000;
+    }
+
+    /* Badge Styles */
+    .badge {
+        font-size: 0.8em;
+        margin-left: 5px;
+        padding: 2px 5px;
+        border-radius: 4px;
+        color: white;
+    }
+
+    .badge-important {
+        background: #dc3545;
+    }
+
+    .badge-medium {
+        background: #ffc107;
+        color: black;
+    }
+
+    .badge-normal {
+        background: #6c757d;
+    }
+
+    .badge-time {
+        background: #f0f0f0;
+        color: #555;
+    }
+
+    /* Settings Dropdown Styles */
+    .settings-dropdown {
+        position: relative;
+        display: inline-block;
+        margin-left: 15px;
+    }
+
+    .settings-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 5px;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .settings-btn:hover {
+        color: #333;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #f9f9f9;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .dropdown-menu a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        font-size: 0.95em;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .show-dropdown {
+        display: block;
+    }
+
+    /* Search and Filter Styles */
+    .search-filter-container {
+        display: flex;
+        gap: 10px;
+        margin: 5px 0 15px 0;
+        align-items: center;
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
+
+    .search-input {
+        width: 150px;
+        /* Drastically shortened */
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .clear-filters {
+        font-size: 0.85em;
+        color: #6c757d;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .clear-filters:hover {
+        color: #dc3545;
+        text-decoration: underline;
+    }
+
+    .filter-select {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        background: white;
+        font-size: 0.85em;
+        max-width: 130px;
+    }
+
+    .search-btn {
+        background: #6c757d;
+        /* Grey instead of blue */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .search-btn:hover {
+        background: #5a6268;
+    }
+
+    /* Custom Calendar Styles */
+    .calendar-container {
+        font-family: sans-serif;
+        width: 100%;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        margin-top: 5px;
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px;
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        margin-top: 5px;
+    }
+
+    .calendar-day-header {
+        text-align: center;
+        font-size: 0.8em;
+        color: #666;
+        padding: 2px;
+    }
+
+    .calendar-day {
+        text-align: center;
+        padding: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .calendar-day:hover {
+        background: #f0f0f0;
+    }
+
+    .calendar-day.selected {
+        background: #28a745;
+        color: white;
+    }
+
+    .calendar-day.today {
+        border: 1px solid #28a745;
+    }
+
+    .calendar-day.prev-next {
+        color: #ccc;
+    }
+
+    /* Sidebar Styles */
+    .app-container {
+        display: flex;
+        gap: 30px;
+        margin-top: 20px;
+        align-items: flex-start;
+    }
+
+    .sidebar {
+        flex: 0 0 200px;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .sidebar-section {
+        margin-bottom: 25px;
+    }
+
+    .sidebar-section h3 {
+        font-size: 0.9em;
+        text-transform: uppercase;
+        color: #6c757d;
+        margin-bottom: 10px;
+        letter-spacing: 0.5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .sidebar-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-item {
+        margin-bottom: 5px;
+    }
+
+    .sidebar-link {
+        display: block;
+        padding: 6px 10px;
+        color: #495057;
+        text-decoration: none;
+        border-radius: 4px;
+        font-size: 0.95em;
+        transition: background 0.2s;
+    }
+
+    .sidebar-link:hover {
+        background: #e9ecef;
+        color: #212529;
+    }
+
+    .sidebar-link.active {
+        background: #28a745;
+        color: white;
+        font-weight: bold;
+    }
+
+    .tag-badge-count {
+        font-size: 0.8em;
+        background: #dee2e6;
+        padding: 2px 6px;
+        border-radius: 10px;
+        color: #495057;
+        float: right;
+    }
+
+    .collapsible-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+    }
+
+    .collapsible-content.open {
+        max-height: 500px;
+        /* Adjust as needed */
+    }
+
+    .toggle-icon {
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .toggle-icon.rotated {
+        transform: rotate(180deg);
+    }
+
+    .main-content {
+        flex: 1;
+    }
 </style>
 
 <div class="auth-header">
     <h1>Tasks</h1>
-    <div>
+    <div style="display: flex; align-items: center;">
         {% if user %}
         <span>Welcome, <strong>{{ user.name }}</strong></span>
         {% if user.picture %}
         <img src="{{ user.picture }}" alt="Avatar"
             style="width: 30px; border-radius: 50%; vertical-align: middle; margin: 0 5px;">
         {% endif %}
-        <a href="{{ url_for('logout') }}" class="button" style="margin-left: 10px; color: red;">Logout</a>
+
+        <div class="settings-dropdown">
+            <button class="settings-btn" onclick="toggleSettingsMenu()" title="Settings">
+                &#9881; <!-- Gear Icon -->
+            </button>
+            <div id="settings-menu" class="dropdown-menu">
+                <a href="{{ url_for('dashboard') }}">Information</a>
+            </div>
+        </div>
+
+        <a href="{{ url_for('logout') }}" class="icon-btn" title="Logout"
+            style="margin-left: 15px; color: #dc3545; font-size: 1.2em;">&#128682;</a>
         {% else %}
         <a href="{{ url_for('login') }}" class="button" style="font-weight: bold; color: blue;">Login with Google</a>
         {% endif %}
     </div>
 </div>
+{% if user %}
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <h3>Period Selection</h3>
+            <ul class="sidebar-list">
+                <li class="sidebar-item">
+                    <a href="{{ url_for('index', period='all') }}"
+                        class="sidebar-link {{ 'active' if current_period == 'all' or not current_period }}">All</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('index', period='today') }}"
+                        class="sidebar-link {{ 'active' if current_period == 'today' }}">Today</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('index', period='tomorrow') }}"
+                        class="sidebar-link {{ 'active' if current_period == 'tomorrow' }}">Tomorrow</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="{{ url_for('index', period='next_week') }}"
+                        class="sidebar-link {{ 'active' if current_period == 'next_week' }}">Next Week</a>
+                </li>
+            </ul>
+        </div>
 
-{% if not user %}
-<div style="text-align: center; margin-top: 50px;">
-    <h2>Please log in to manage your tasks.</h2>
-    <p>Your tasks are private and secure.</p>
-</div>
-{% else %}
+        <div class="sidebar-section">
+            <h3>
+                Tags Selection
+                <span class="toggle-icon" onclick="toggleSidebarSection('tags-collapsible', this)">▼</span>
+            </h3>
+            <div id="tags-collapsible" class="collapsible-content open">
+                <ul class="sidebar-list">
+                    {% for tag_name, count in stats.tag_summary.items() %}
+                    <li class="sidebar-item">
+                        <a href="{{ url_for('index', tag=tag_name) }}"
+                            class="sidebar-link {{ 'active' if current_tag == tag_name }}">
+                            #{{ tag_name }}
+                            <span class="tag-badge-count">{{ count }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </aside>
 
-{# Macro for Recursive Task Rendering #}
-{% macro render_task(task, level=0) %}
-<div style="margin-left: {{ level * 30 }}px; padding-left: 10px; margin-bottom: 5px;">
-    <div class="task-row">
-        <div style="flex-grow: 1;">
-            {# Importance Badge #}
-            {% if task.importance and task.importance != '' %}
-            <span class="badge" style="font-size: 0.8em; margin-left: 5px; padding: 2px 5px; border-radius: 4px;
-                {% if task.importance == 'Important' %}background: #dc3545; color: white;
-                {% elif task.importance == 'Medium' %}background: #ffc107; color: black;
-                {% else %}background: #6c757d; color: white;{% endif %}">
-                {{ task.importance }}
-            </span>
+    <main class="main-content">
+        {# Search and Filtering UI #}
+        <form action="/" method="GET" class="search-filter-container">
+            <input type="text" name="q" placeholder="Search..." value="{{ current_q or '' }}" class="search-input">
+
+
+            <select name="importance" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Importance</option>
+                <option value="Important" {% if current_importance=='Important' %}selected{% endif %}>Important</option>
+                <option value="Medium" {% if current_importance=='Medium' %}selected{% endif %}>Medium</option>
+                <option value="Normal" {% if current_importance=='Normal' %}selected{% endif %}>Normal</option>
+            </select>
+
+            <button type="submit" class="search-btn" title="Search">
+                &#128269; <!-- Search Icon (Magnifying Glass) -->
+            </button>
+
+            {% if current_q or current_tag or current_importance %}
+            <a href="/" class="clear-filters">Clear All</a>
             {% endif %}
-            <span class="task-title {% if task.status == 'completed' %}completed{% endif %}"
-                onclick="toggleForm('edit-form-{{ task.id }}')" title="Click to edit">
-                {{ task.title }}
-            </span>
+        </form>
 
-            {# Time Display - Branch Only, Excluding Completed #}
-            <span class="badge"
-                style="font-size: 0.8em; color: #555; background: #f0f0f0; padding: 2px 5px; border-radius: 4px; margin-left: 10px;">
-                {% if task.time_minutes %}
-                {{ task.time_minutes }}m
-                {% else %}
-                -
-                {% endif %}
-                {% if task.children %} | Total: {{ task.branch_total }}m{% endif %}
-            </span>
-
-            {% if task.status != 'pending' %}
-            <span class="badge" style="font-size: 0.8em; color: #666; margin-left: 5px;">({{ task.status }})</span>
-            {% endif %}
-
-            {% if task.ai_suggestion and task.status != 'completed' %}
-            <div class="ai-suggestion-container"
-                style="font-size: 0.85em; color: #0056b3; margin-top: 5px; background: #f8fbff; padding: 8px; border-radius: 6px; border-left: 3px solid #007bff; display: flex; justify-content: space-between; align-items: flex-start;">
+        {# Macro for Recursive Task Rendering #}
+        {% macro render_task(task, level=0) %}
+        <div style="margin-left: {{ level * 30 }}px; padding-left: 10px; margin-bottom: 5px;">
+            <div class="task-row">
                 <div style="flex-grow: 1;">
-                    {% if task.ai_suggestion is string %}
-                    <span style="font-style: italic;">AI: {{ task.ai_suggestion }}</span>
-                    {% else %}
-                    <ul style="margin: 0; padding-left: 15px; list-style-type: circle;">
-                        {% for item in task.ai_suggestion %}
-                        {# Handle both legacy strings and new objects #}
-                        {% set item_text = item.text if item is mapping else item %}
-                        {% set is_done = item.done if item is mapping else false %}
-                        <li
-                            style="margin-bottom: 4px; display: flex; align-items: start; justify-content: space-between;">
-                            <span
-                                style="flex-grow: 1; {% if is_done %}text-decoration: line-through; color: #999;{% endif %}">{{
-                                item_text }}</span>
-                            <div style="display: flex; gap: 4px; margin-left: 10px; align-items: center;">
-                                {# Toggle/Checkmark Icon #}
-                                <a href="{{ url_for('toggle_suggestion_item', task_id=task.id, text=item_text) }}"
-                                    class="icon-btn" style="color: #007bff; font-size: 1.1em;" title="Mark as Done">
-                                    {% if is_done %}&#9111;{% else %}&#10003;{% endif %}
-                                </a>
+                    {% if task.importance and task.importance != '' %}
+                    <span class="badge 
+                {% if task.importance == 'Important' %}badge-important
+                {% elif task.importance == 'Medium' %}badge-medium
+                {% else %}badge-normal{% endif %}">
+                        {{ task.importance }}
+                    </span>
+                    {% endif %}
+                    <span class="task-title {% if task.status == 'completed' %}completed{% endif %}"
+                        onclick="toggleForm('edit-form-{{ task.id }}')" title="Click to edit">
+                        {{ task.title }}
+                    </span>
 
-                                {# Add as Subtask Icon #}
-                                <form action="/add_task" method="POST" style="display: inline;">
-                                    <input type="hidden" name="parent_id" value="{{ task.id }}">
-                                    <input type="hidden" name="title" value="{{ item_text }}">
-                                    <button type="submit" class="icon-btn"
-                                        style="color: #28a745; font-weight: bold; font-size: 1.2em; background: transparent;"
-                                        title="Add as subtask">+</button>
-                                </form>
+                    {# Tags Display #}
+                    {% if task.tags %}
+                    {% for tag in task.tags %}
+                    <span class="tag-badge">
+                        {{ tag.name }}
+                        <a href="{{ url_for('remove_tag', task_id=task.id, tag_id=tag.id) }}" class="tag-remove"
+                            title="Remove tag">x</a>
+                    </span>
+                    {% endfor %}
+                    {% endif %}
 
-                                {# Remove Item Icon #}
-                                <a href="{{ url_for('remove_suggestion_item', task_id=task.id, text=item_text) }}"
-                                    class="icon-btn" style="color: #dc3545; font-size: 1.0em;"
-                                    title="Remove Suggestion">&times;</a>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
+                    {# Time Display - Branch Only, Excluding Completed #}
+                    <span class="badge badge-time" style="margin-left: 10px;">
+                        {% if task.time_minutes %}
+                        {{ task.time_minutes }}m
+                        {% else %}
+                        -
+                        {% endif %}
+                        {% if task.children %} | Total: {{ task.branch_total }}m{% endif %}
+                    </span>
+
+                    {% if task.due_at %}
+                    <span class="badge due-tag"
+                        style="font-size: 0.8em; color: #856404; background: #fff3cd; border: 1px solid #ffeeba; margin-left: 5px;"
+                        title="Due at"
+                        data-due-at="{{ task.due_at.isoformat() if task.due_at is not string else task.due_at }}">
+                        🕐 <span class="due-display-text"></span>
+                    </span>
+                    {% endif %}
+
+                    {% if task.status != 'pending' %}
+                    <span class="badge badge-time" style="color: #666; background: transparent;">({{ task.status
+                        }})</span>
+                    {% endif %}
+
+                    {% if task.ai_suggestion and task.status != 'completed' %}
+                    <div class="ai-suggestion-container"
+                        style="font-size: 0.85em; color: #0056b3; margin-top: 5px; background: #f8fbff; padding: 8px; border-radius: 6px; border-left: 3px solid #007bff; display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex-grow: 1;">
+                            {% if task.ai_suggestion is string %}
+                            <span style="font-style: italic;">AI: {{ task.ai_suggestion }}</span>
+                            {% else %}
+                            <ul style="margin: 0; padding-left: 15px; list-style-type: circle;">
+                                {% for item in task.ai_suggestion %}
+                                {# Handle both legacy strings and new objects #}
+                                {% set item_text = item.text if item is mapping else item %}
+                                {% set is_done = item.done if item is mapping else false %}
+                                {% set item_time = item.time if item is mapping else 0 %}
+                                {% set suggestion_id = "sug-" ~ task.id ~ "-" ~ loop.index %}
+                                <li
+                                    style="margin-bottom: 8px; display: flex; align-items: start; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
+                                    <div style="flex-grow: 1;">
+                                        <div id="display-{{ suggestion_id }}"
+                                            onclick="enableEdit('{{ suggestion_id }}')"
+                                            style="cursor: pointer; padding: 2px;">
+                                            <span
+                                                style="{% if is_done %}text-decoration: line-through; color: #999;{% endif %}">{{
+                                                item_text }}</span>
+                                            {% if item_time %}<span
+                                                style="color: #666; font-size: 0.9em; margin-left: 5px;">({{
+                                                item_time }}m)</span>{% endif %}
+                                        </div>
+                                        <div id="edit-{{ suggestion_id }}" style="display: none;">
+                                            <form action="{{ url_for('edit_suggestion_item', task_id=task.id) }}"
+                                                method="POST" style="display: flex; gap: 4px; align-items: center;">
+                                                <input type="hidden" name="old_text" value="{{ item_text }}">
+                                                <input type="text" name="new_text" id="input-text-{{ suggestion_id }}"
+                                                    value="{{ item_text }}" style="flex-grow: 1; font-size: 0.9em;"
+                                                    onkeydown="handleSuggestionKey(event, '{{ suggestion_id }}')">
+                                                <input type="number" name="new_time" id="input-time-{{ suggestion_id }}"
+                                                    value="{{ item_time }}" style="width: 50px; font-size: 0.9em;"
+                                                    placeholder="min">
+                                                <button type="submit" class="icon-btn" style="color: green;"
+                                                    title="Save">&#10003;</button>
+                                                <button type="button" class="icon-btn" style="color: red;"
+                                                    onclick="disableEdit('{{ suggestion_id }}')"
+                                                    title="Cancel">&times;</button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 4px; margin-left: 10px; align-items: center;">
+                                        {# Toggle/Checkmark Icon #}
+                                        <a href="{{ url_for('toggle_suggestion_item', task_id=task.id, text=item_text) }}"
+                                            class="icon-btn" style="color: #007bff; font-size: 1.1em;"
+                                            title="Mark as Done">
+                                            {% if is_done %}&#9111;{% else %}&#10003;{% endif %}
+                                        </a>
+
+                                        {# Add as Subtask Icon (WITH AI) #}
+                                        <form action="/add_task" method="POST" style="display: inline;">
+                                            <input type="hidden" name="parent_id" value="{{ task.id }}">
+                                            <input type="hidden" name="title" value="{{ item_text }}">
+                                            <input type="hidden" name="time_minutes" value="{{ item_time }}">
+                                            <button type="submit" class="icon-btn"
+                                                style="color: #17a2b8; font-weight: bold; font-size: 1.2em; background: transparent;"
+                                                title="Add as subtask (with AI suggestions)">+</button>
+                                        </form>
+
+                                        {# Save as Subtask Icon (WITHOUT AI) #}
+                                        <form action="/add_task" method="POST" style="display: inline;">
+                                            <input type="hidden" name="parent_id" value="{{ task.id }}">
+                                            <input type="hidden" name="title" value="{{ item_text }}">
+                                            <input type="hidden" name="time_minutes" value="{{ item_time }}">
+                                            <input type="hidden" name="run_ai" value="false">
+                                            <button type="submit" class="icon-btn"
+                                                style="color: #28a745; font-size: 1.2em; background: transparent;"
+                                                title="Save as real task (no AI)">&#128190;</button>
+                                        </form>
+
+                                        {# Remove Item Icon #}
+                                        <a href="{{ url_for('remove_suggestion_item', task_id=task.id, text=item_text) }}"
+                                            class="icon-btn" style="color: #dc3545; font-size: 1.0em;"
+                                            title="Remove Suggestion">&times;</a>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('clear_suggestion', task_id=task.id) }}"
+                            class="icon-btn delete-icon clear-ai-btn"
+                            style="font-size: 1.5em; margin-left: 15px; line-height: 1; color: #aaa; align-self: center;"
+                            title="Clear All Suggestions">&times;&times;</a>
+                    </div>
+                    {% endif %}
+
+                    {# Description Display #}
+                    {% if task.description %}
+                    <div
+                        style="display: none; font-size: 0.85em; color: #444; margin-top: 4px; white-space: pre-wrap; border-top: 1px solid #f0f0f0; padding-top: 2px;">
+                        {{ task.description }}</div>
                     {% endif %}
                 </div>
-                <a href="{{ url_for('clear_suggestion', task_id=task.id) }}" class="icon-btn delete-icon clear-ai-btn"
-                    style="font-size: 1.5em; margin-left: 15px; line-height: 1; color: #aaa; align-self: center;"
-                    title="Clear All Suggestions">&times;&times;</a>
-            </div>
-            {% endif %}
 
-            {# Description Display #}
-            {% if task.description %}
-            <div
-                style="display: none; font-size: 0.85em; color: #444; margin-top: 4px; white-space: pre-wrap; border-top: 1px solid #f0f0f0; padding-top: 2px;">
-                {{ task.description }}</div>
-            {% endif %}
-        </div>
+                <div class="task-actions" style="display: flex; align-items: center; gap: 5px;">
+                    {% if task.status != 'completed' %}
+                    <a href="{{ url_for('complete_task', task_id=task.id) }}" class="icon-btn" title="Complete">
+                        &#10003; {# Checkmark #}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="icon-btn"
+                        title="Undo Completion">
+                        &#8617; {# Undo (Reply arrow) #}
+                    </a>
+                    {% endif %}
 
-        <div class="task-actions" style="display: flex; align-items: center; gap: 5px;">
-            {% if task.status != 'completed' %}
-            <a href="{{ url_for('complete_task', task_id=task.id) }}" class="icon-btn" title="Complete">
-                &#10003; {# Checkmark #}
-            </a>
-            {% else %}
-            <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="icon-btn" title="Undo Completion">
-                &#8617; {# Undo (Reply arrow) #}
-            </a>
-            {% endif %}
+                    {# Edit Icon #}
+                    {% if task.status != 'completed' %}
+                    <button onclick="toggleForm('edit-form-{{ task.id }}')" class="icon-btn edit-icon" title="Edit">
+                        &#9998; {# Pencil #}
+                    </button>
+                    {% else %}
+                    <button class="icon-btn icon-disabled" title="Cannot edit completed task" disabled>
+                        &#9998; {# Pencil #}
+                    </button>
+                    {% endif %}
 
-            {# Edit Icon #}
-            {% if task.status != 'completed' %}
-            <button onclick="toggleForm('edit-form-{{ task.id }}')" class="icon-btn edit-icon" title="Edit">
-                &#9998; {# Pencil #}
-            </button>
-            {% else %}
-            <button class="icon-btn icon-disabled" title="Cannot edit completed task" disabled>
-                &#9998; {# Pencil #}
-            </button>
-            {% endif %}
+                    {# Delete Icon #}
+                    <a href="{{ url_for('delete_task', task_id=task.id) }}" class="icon-btn delete-icon" title="Delete">
+                        &#128465; {# Trash Bin #}
+                    </a>
 
-            {# Delete Icon #}
-            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="icon-btn delete-icon" title="Delete">
-                &#128465; {# Trash Bin #}
-            </a>
+                    {# Add Subtask #}
+                    {% if task.status != 'completed' %}
+                    <button onclick="toggleForm('subtask-form-{{ task.id }}')" class="icon-btn subtask-icon"
+                        title="Add Subtask">
+                        +
+                    </button>
+                    {% else %}
+                    <button class="icon-btn icon-disabled" title="Cannot add subtask to completed task" disabled>
+                        +
+                    </button>
+                    {% endif %}
 
-            {# Add Subtask #}
-            {% if task.status != 'completed' %}
-            <button onclick="toggleForm('subtask-form-{{ task.id }}')" class="icon-btn subtask-icon"
-                title="Add Subtask">
-                +
-            </button>
-            {% else %}
-            <button class="icon-btn icon-disabled" title="Cannot add subtask to completed task" disabled>
-                +
-            </button>
-            {% endif %}
-
-            {# Hide Button #}
-            <div class="dropdown">
-                <button onclick="toggleHideMenu('hide-menu-{{ task.id }}')" class="icon-btn" title="Hide Task">
-                    &#128065; {# Eye icon #}
-                </button>
-                <div id="hide-menu-{{ task.id }}" class="dropdown-content">
-                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 day') }}">1 day</a>
-                    <a href="{{ url_for('hide_task', task_id=task.id, duration='2 days') }}">2 days</a>
-                    <a href="{{ url_for('hide_task', task_id=task.id, duration='3 days') }}">3 days</a>
-                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 week') }}">1 week</a>
-                    <a href="{{ url_for('hide_task', task_id=task.id, duration='2 weeks') }}">2 weeks</a>
-                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 month') }}">1 month</a>
+                    {# Hide Button #}
+                    <div class="dropdown">
+                        <button onclick="toggleHideMenu('hide-menu-{{ task.id }}')" class="icon-btn" title="Hide Task">
+                            &#128065; {# Eye icon #}
+                        </button>
+                        <div id="hide-menu-{{ task.id }}" class="dropdown-content">
+                            <a href="{{ url_for('hide_task', task_id=task.id, duration='1 day') }}">1 day</a>
+                            <a href="{{ url_for('hide_task', task_id=task.id, duration='2 days') }}">2 days</a>
+                            <a href="{{ url_for('hide_task', task_id=task.id, duration='3 days') }}">3 days</a>
+                            <a href="{{ url_for('hide_task', task_id=task.id, duration='1 week') }}">1 week</a>
+                            <a href="{{ url_for('hide_task', task_id=task.id, duration='2 weeks') }}">2 weeks</a>
+                            <a href="{{ url_for('hide_task', task_id=task.id, duration='1 month') }}">1 month</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-{# Edit Form (Hidden by default) #}
-<div id="edit-form-{{ task.id }}"
-    style="display: none; margin-top: 5px; margin-left: 20px; background: #fff3cd; padding: 5px;">
-    <form action="/update_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
-        <input type="hidden" name="task_id" value="{{ task.id }}">
-        <input type="text" name="title" value="{{ task.title }}" required style="width: 200px;">
-        <select name="importance" style="font-size: 0.9em; padding: 2px;">
-            <option value="">None</option>
-            <option value="Important" {% if task.importance=='Important' %}selected{% endif %}>Important</option>
-            <option value="Medium" {% if task.importance=='Medium' %}selected{% endif %}>Medium</option>
-            <option value="Not important" {% if task.importance=='Not important' %}selected{% endif %}>Not important
-            </option>
-        </select>
-        <input type="number" name="time_minutes" value="{{ task.time_minutes if task.time_minutes else 0 }}"
-            style="width: 60px;">
-        <button type="submit" style="font-size: 0.8em; background-color: #ffc107; color: #000;">Save</button>
-        <div style="display: none; width: 100%; margin-top: 5px;">
-            <textarea name="description" placeholder="Description (optional)" rows="4"
-                style="width: 100%; font-size: 0.9em;">{{ task.description if task.description else '' }}</textarea>
+        {# Edit Form (Hidden by default) #}
+        <div id="edit-form-{{ task.id }}"
+            style="display: none; margin-top: 5px; margin-left: 20px; background: #fff3cd; padding: 5px;">
+            <form action="/update_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
+                <input type="hidden" name="task_id" value="{{ task.id }}">
+                <input type="hidden" name="due_at" id="due-at-{{ task.id }}"
+                    value="{{ task.due_at if task.due_at else '' }}">
+                <input type="text" name="title" value="{{ task.title }}" required style="width: 200px;">
+                <button type="button" class="icon-btn"
+                    onclick="openTimeSetDialog('{{ task.id }}', '{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}')"
+                    title="Set Due Time">
+                    🕐
+                </button>
+                <span id="due-preview-{{ task.id }}" class="due-preview"
+                    data-due-at="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}"
+                    onclick="openTimeSetDialog('{{ task.id }}', '{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}')"
+                    style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
+                    <span class="due-preview-text"></span>
+                </span>
+                <select name="importance" style="font-size: 0.9em; padding: 2px;">
+                    <option value="">None</option>
+                    <option value="Important" {% if task.importance=='Important' %}selected{% endif %}>Important
+                    </option>
+                    <option value="Medium" {% if task.importance=='Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Not important" {% if task.importance=='Not important' %}selected{% endif %}>Not
+                        important
+                    </option>
+                </select>
+                <input type="number" name="time_minutes" value="{{ task.time_minutes if task.time_minutes else 0 }}"
+                    style="width: 60px;">
+                <button type="submit" style="font-size: 0.8em; background-color: #ffc107; color: #000;">Save</button>
+                <div style="display: none; width: 100%; margin-top: 5px;">
+                    <textarea name="description" placeholder="Description (optional)" rows="4"
+                        style="width: 100%; font-size: 0.9em;">{{ task.description if task.description else '' }}</textarea>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
 
-{# Subtask Form (Hidden by default) #}
-<div id="subtask-form-{{ task.id }}" style="display: none; margin-top: 5px; margin-left: 20px;">
-    <form action="/add_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
-        <input type="hidden" name="parent_id" value="{{ task.id }}">
-        <input type="text" name="title" placeholder="Subtask title" required style="width: 200px;">
-        <input type="number" name="time_minutes" placeholder="Mins" style="width: 60px;">
-        <select name="importance" style="font-size: 0.8em; padding: 2px;">
-            <option value="">None</option>
-            <option value="Important">Important</option>
-            <option value="Medium">Medium</option>
-            <option value="Not important">Not important</option>
-        </select>
-        <button type="submit" style="font-size: 0.8em;">Add</button>
-        <div style="display: none; width: 100%; margin-top: 5px;">
-            <textarea name="description" placeholder="Subtask description (optional)" rows="3"
-                style="width: 100%; font-size: 0.9em;"></textarea>
+        {# Subtask Form (Hidden by default) #}
+        <div id="subtask-form-{{ task.id }}" style="display: none; margin-top: 5px; margin-left: 20px;">
+            <form action="/add_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
+                <input type="hidden" name="parent_id" value="{{ task.id }}">
+                <input type="hidden" name="due_at" id="due-at-sub-{{ task.id }}" value="">
+                <input type="text" name="title" placeholder="Subtask title" required style="width: 200px;">
+                <button type="button" class="icon-btn" onclick="openTimeSetDialog('sub-{{ task.id }}', '')"
+                    title="Set Due Time">
+                    🕐
+                </button>
+                <span id="due-preview-sub-{{ task.id }}" class="due-preview"
+                    onclick="openTimeSetDialog('sub-{{ task.id }}', '')"
+                    style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
+                    <span class="due-preview-text"></span>
+                </span>
+                <input type="number" name="time_minutes" placeholder="Mins" style="width: 60px;">
+                <select name="importance" style="font-size: 0.8em; padding: 2px;">
+                    <option value="">None</option>
+                    <option value="Important">Important</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Not important">Not important</option>
+                </select>
+                <button type="submit" style="font-size: 0.8em;">Add</button>
+                <div style="display: none; width: 100%; margin-top: 5px;">
+                    <textarea name="description" placeholder="Subtask description (optional)" rows="3"
+                        style="width: 100%; font-size: 0.9em;"></textarea>
+                </div>
+            </form>
         </div>
-    </form>
-</div>
 
-{# Render Children #}
-{% if task.children %}
-<div class="children">
-    {% for child in task.children %}
-    {{ render_task(child, level + 1) }}
-    {% endfor %}
-</div>
-{% endif %}
+        {# Render Children #}
+        {% if task.children %}
+        <div class="children">
+            {% for child in task.children %}
+            {{ render_task(child, level + 1) }}
+            {% endfor %}
+        </div>
+        {% endif %}
 </div>
 {% endmacro %}
 
 <div>
     <form action="/add_task" method="POST" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
-        <input type="text" name="title" placeholder="Enter root task title" required style="width: 300px">
+        <input type="hidden" name="due_at" id="due-at-root" value="">
+        <input type="text" name="title" placeholder="Do what?" required style="width: 300px">
+        <button type="button" class="icon-btn" onclick="openTimeSetDialog('root', '')" title="Set Due Time">
+            🕐
+        </button>
+        <span id="due-preview-root" class="due-preview" onclick="openTimeSetDialog('root', '')"
+            style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
+            <span class="due-preview-text"></span>
+        </span>
         <div style="display: flex; align-items: center; gap: 5px;">
             <input type="number" name="time_minutes" placeholder="000" style="width: 50px" min="0" max="999">
             <span style="font-size: 0.9em; color: #666;">min</span>
@@ -389,6 +877,12 @@
 </div>
 
 <script>
+    function toggleSidebarSection(id, icon) {
+        const content = document.getElementById(id);
+        content.classList.toggle('open');
+        icon.classList.toggle('rotated');
+    }
+
     function toggleForm(id) {
         const form = document.getElementById(id);
         form.style.display = form.style.display === 'none' ? 'block' : 'none';
@@ -418,7 +912,265 @@
             }
         }
     }
+
+    function enableEdit(id) {
+        document.getElementById('display-' + id).style.display = 'none';
+        document.getElementById('edit-' + id).style.display = 'block';
+        document.getElementById('input-text-' + id).focus();
+    }
+
+    function disableEdit(id) {
+        document.getElementById('display-' + id).style.display = 'block';
+        document.getElementById('edit-' + id).style.display = 'none';
+    }
+
+    function handleSuggestionKey(event, id) {
+        if (event.key === 'Escape') {
+            disableEdit(id);
+        }
+    }
+
+    function toggleSettingsMenu() {
+        document.getElementById('settings-menu').classList.toggle('show-dropdown');
+    }
+
+    // Close dropdowns if clicking outside
+    window.onclick = function (event) {
+        if (!event.target.matches('.settings-btn') && !event.target.closest('.settings-btn')) {
+            const dropdowns = document.getElementsByClassName("dropdown-menu");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show-dropdown')) {
+                    openDropdown.classList.remove('show-dropdown');
+                }
+            }
+        }
+    }
+    let currentTargetInputId = null;
+    let calendarDate = new Date();
+    let selectedDateStr = "";
+
+    function openTimeSetDialog(id, currentValue) {
+        currentTargetInputId = 'due-at-' + id;
+        const dialog = document.getElementById('task-time-set-dialog');
+        const timeInput = document.getElementById('due-time-input');
+
+        if (currentValue) {
+            let d;
+            if (currentValue.includes('T')) {
+                d = new Date(currentValue);
+            } else {
+                d = new Date(currentValue.replace(' ', 'T'));
+            }
+
+            if (!isNaN(d.getTime())) {
+                calendarDate = new Date(d);
+                selectedDateStr = d.toISOString().split('T')[0];
+                timeInput.value = d.toTimeString().split(' ')[0].substring(0, 5);
+            } else {
+                calendarDate = new Date();
+                selectedDateStr = "";
+                timeInput.value = "";
+            }
+        } else {
+            calendarDate = new Date();
+            selectedDateStr = "";
+            timeInput.value = "";
+        }
+
+        renderCalendar();
+        dialog.style.display = 'flex';
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        const monthYearLabel = document.getElementById('calendar-month-year');
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        monthYearLabel.innerText = months[calendarDate.getMonth()] + " " + calendarDate.getFullYear();
+
+        grid.innerHTML = "";
+        const dayHeaders = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+        dayHeaders.forEach(day => {
+            const div = document.createElement('div');
+            div.className = 'calendar-day-header';
+            div.innerText = day;
+            grid.appendChild(div);
+        });
+
+        const firstDayOfMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay();
+        const daysInMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate();
+
+        // Prev month days padding
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            const div = document.createElement('div');
+            div.className = 'calendar-day prev-next';
+            grid.appendChild(div);
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const div = document.createElement('div');
+            div.className = 'calendar-day';
+            div.innerText = day;
+
+            const currentStr = calendarDate.getFullYear() + "-" + String(calendarDate.getMonth() + 1).padStart(2, '0') + "-" + String(day).padStart(2, '0');
+
+            if (currentStr === selectedDateStr) div.classList.add('selected');
+            if (currentStr === today) div.classList.add('today');
+
+            div.onclick = () => {
+                selectedDateStr = currentStr;
+                renderCalendar();
+            };
+            grid.appendChild(div);
+        }
+    }
+
+    function changeMonth(delta) {
+        calendarDate.setMonth(calendarDate.getMonth() + delta);
+        renderCalendar();
+    }
+
+    function closeTimeSetDialog() {
+        document.getElementById('task-time-set-dialog').style.display = 'none';
+    }
+
+    function saveTimeSet() {
+        const timeInput = document.getElementById('due-time-input').value;
+        const targetInputId = currentTargetInputId;
+        const targetInput = document.getElementById(targetInputId);
+        const previewId = targetInputId.replace('due-at-', 'due-preview-');
+        const previewSpan = document.getElementById(previewId);
+
+        let finalValue = "";
+        if (selectedDateStr && timeInput) {
+            finalValue = selectedDateStr + ' ' + timeInput + ':00';
+        } else if (selectedDateStr) {
+            finalValue = selectedDateStr + ' 00:00:00';
+        }
+
+        targetInput.value = finalValue;
+        if (previewSpan) {
+            if (finalValue) {
+                const textSpan = previewSpan.querySelector('.due-preview-text');
+                if (textSpan) textSpan.innerText = formatDueDisplay(finalValue);
+                previewSpan.style.display = 'inline-block';
+            } else {
+                previewSpan.style.display = 'none';
+            }
+        }
+
+        closeTimeSetDialog();
+    }
+
+    function clearTimeSet() {
+        const targetInputId = currentTargetInputId;
+        document.getElementById(targetInputId).value = '';
+        const previewId = targetInputId.replace('due-at-', 'due-preview-');
+        const previewSpan = document.getElementById(previewId);
+        if (previewSpan) {
+            previewSpan.style.display = 'none';
+        }
+        closeTimeSetDialog();
+    }
+
+    function formatDueDisplay(dueString) {
+        if (!dueString) return "";
+        const isoString = dueString.includes('T') ? dueString : dueString.replace(' ', 'T');
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return dueString;
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const targetDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+        let datePart = "";
+        if (targetDate.getTime() === today.getTime()) {
+            datePart = "Today";
+        } else if (targetDate.getTime() === tomorrow.getTime()) {
+            datePart = "Tomorrow";
+        } else {
+            const day = d.getDate();
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const month = monthNames[d.getMonth()];
+            const year = String(d.getFullYear()).substring(2);
+            datePart = `${day} ${month} ${year}`;
+        }
+
+        const hours = d.getHours();
+        const minutes = d.getMinutes();
+
+        if (hours === 0 && minutes === 0) {
+            return datePart;
+        } else {
+            return `${datePart} ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Format all existing due badges
+        document.querySelectorAll('.due-tag').forEach(badge => {
+            const raw = badge.getAttribute('data-due-at');
+            const textSpan = badge.querySelector('.due-display-text');
+            if (raw && textSpan && raw !== 'None' && raw !== '') {
+                textSpan.innerText = formatDueDisplay(raw);
+            }
+        });
+        // Format all existing previews in edit forms
+        document.querySelectorAll('.due-preview').forEach(preview => {
+            const raw = preview.getAttribute('data-due-at');
+            const textSpan = preview.querySelector('.due-preview-text');
+            if (raw && textSpan && raw !== 'None' && raw !== '') {
+                textSpan.innerText = formatDueDisplay(raw);
+                preview.style.display = 'inline-block';
+            }
+        });
+    });
 </script>
 
+<!-- TaskTimeSet Dialog -->
+<div id="task-time-set-dialog"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+    <div
+        style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); min-width: 320px;">
+        <h3 style="margin-top: 0; margin-bottom: 10px;">Set Due Time</h3>
+
+        <div id="calendar-view" class="calendar-container">
+            <div class="calendar-header">
+                <button type="button" onclick="changeMonth(-1)" class="icon-btn">&lt;</button>
+                <span id="calendar-month-year"></span>
+                <button type="button" onclick="changeMonth(1)" class="icon-btn">&gt;</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid">
+                <!-- Days will be injected here -->
+            </div>
+        </div>
+
+        <input type="hidden" id="due-date-input">
+
+        <div style="margin-top: 15px; margin-bottom: 20px;">
+            <label style="display: block; font-size: 0.9em; margin-bottom: 5px;">Time</label>
+            <input type="time" id="due-time-input"
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button onclick="clearTimeSet()"
+                style="padding: 8px 15px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer;">Clear</button>
+            <button onclick="closeTimeSetDialog()"
+                style="padding: 8px 15px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+            <button onclick="saveTimeSet()"
+                style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Save</button>
+        </div>
+    </div>
+</div>
+
+</main>
+</div>
 {% endif %} {# End if user #}
 {% endblock %}
