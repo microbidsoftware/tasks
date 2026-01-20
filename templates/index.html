@@ -672,6 +672,19 @@
                     <span class="folding-toggle" style="visibility: hidden;">▼</span>
                     {% endif %}
 
+                    {# Custom Checkbox #}
+                    {% if task.status == 'completed' %}
+                    <a href="{{ url_for('uncomplete_task', task_id=task.id) }}"
+                        style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 2px solid #28a745; border-radius: 6px; margin-right: 8px; background-color: #28a745; cursor: pointer;">
+                        <span style="color: white; font-size: 14px; font-weight: bold; line-height: 1;">&#10003;</span>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('complete_task', task_id=task.id) }}"
+                        style="text-decoration: none; display: inline-flex; width: 18px; height: 18px; border: 2px solid #ccc; border-radius: 6px; margin-right: 8px; cursor: pointer; transition: border-color 0.2s;"
+                        onmouseover="this.style.borderColor='#888'" onmouseout="this.style.borderColor='#ccc'">
+                    </a>
+                    {% endif %}
+
                     {# Title #}
                     <span class="task-title {% if task.status == 'completed' %}completed{% endif %}"
                         onclick="toggleForm('edit-form-{{ task.id }}')" title="Click to edit"

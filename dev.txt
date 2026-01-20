@@ -157,3 +157,7 @@ dialogue windows that sets sets a date and a time.
 closing it after clcking. (Not save button click needed in case of using the button)
 3) In that window also s that sets a date and a time, make  buttons on the top [+1] and [+7] [+1M] that will shift the date by +1 day and +7 and  days and 1 months accordingly, and will update the date in the dialogue window, immediately
 closing it after clcking. (Not save button click needed in case of using these buttons)
+
+Task Completion check box
+1) Now the completed the task of sub-task or not is set by a button completed through the menu. I would like that before the caption of each task there will be a checkbox that clicking on that and marking it as checked in would ultimately make the task completed. The opposite meaning "uncheck" of "check" at check box will make it undo.
+2) it will be better that this checkbox will not be a regular checkbox used in the form, but a more gentle checkbox with slightly rounded corners.
