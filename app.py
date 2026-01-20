@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from task_manager import TaskManager
-from db_manager import initialize_database, get_or_create_user
+from db_manager import initialize_database, get_or_create_user, get_db_connection
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 import os
+import datetime
 
 load_dotenv()
 
@@ -50,9 +51,17 @@ def index():
     
     tasks_tree, stats = manager.list_tasks(user['id'], search_query, tag_filter, importance_filter, period_filter)
     
-    return render_template('index.html', user=user, tasks=tasks_tree, stats=stats, 
-                           current_q=search_query, current_tag=tag_filter, 
-                           current_importance=importance_filter, current_period=period_filter)
+    today = datetime.date.today()
+    
+    return render_template('index.html', 
+                           user=user, 
+                           tasks=tasks_tree, 
+                           stats=stats, 
+                           current_q=search_query, 
+                           current_tag=tag_filter, 
+                           current_importance=importance_filter, 
+                           current_period=period_filter,
+                           now=datetime.datetime.now())
 
 @app.route('/dashboard')
 def dashboard():
@@ -74,19 +83,48 @@ def auth():
     user_info = token.get('userinfo')
     
     if user_info:
-        user_id = get_or_create_user(user_info)
-        if user_id:
+        db_user = get_or_create_user(user_info)
+        if db_user:
             session['user'] = {
-                'id': user_id,
+                'id': db_user['id'],
                 'name': user_info.get('name'),
                 'email': user_info.get('email'),
-                'picture': user_info.get('picture')
+                'picture': user_info.get('picture'),
+                'show_completed_tasks': db_user.get('show_completed_tasks', 1)
             }
     return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    return redirect(url_for('index'))
+
+@app.route('/toggle_completed_visibility')
+def toggle_completed_visibility():
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+    
+    current_setting = user.get('show_completed_tasks', 1)
+    new_setting = 0 if current_setting == 1 else 1
+    
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET show_completed_tasks = %s WHERE id = %s", (new_setting, user['id']))
+            conn.commit()
+            
+            # Update session
+            user['show_completed_tasks'] = new_setting
+            session['user'] = user
+            
+        except Exception as e:
+            print(f"Error toggling visibility: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+            
     return redirect(url_for('index'))
 
 @app.route('/add_task', methods=['POST'])

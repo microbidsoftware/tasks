@@ -108,11 +108,16 @@ class TaskManager:
                 cursor = conn.cursor(dictionary=True)
                 # Sort: Pending (0) first, Completed (1) last. Then by created_at.
                 query = """
-                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at, is_folded, level, branch_id
+                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at, is_folded, level, branch_id, completed_at
                     FROM tasks 
                     WHERE user_id = %s 
                     AND (hide_until IS NULL OR hide_until <= NOW())
-                    ORDER BY (status = 'completed') ASC, created_at DESC
+                    ORDER BY 
+                        (status = 'completed') ASC,
+                        CASE 
+                            WHEN status = 'completed' THEN completed_at 
+                            ELSE created_at 
+                        END DESC
                 """
                 cursor.execute(query, (user_id,))
                 all_tasks = cursor.fetchall()

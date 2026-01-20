@@ -161,3 +161,25 @@ closing it after clcking. (Not save button click needed in case of using these b
 Task Completion check box
 1) Now the completed the task of sub-task or not is set by a button completed through the menu. I would like that before the caption of each task there will be a checkbox that clicking on that and marking it as checked in would ultimately make the task completed. The opposite meaning "uncheck" of "check" at check box will make it undo.
 2) it will be better that this checkbox will not be a regular checkbox used in the form, but a more gentle checkbox with slightly rounded corners.
+
+
+When you add a subtask to a task, it should be added to the same period as the parent task. 
+But is the parent task is overdue, than the subtask should be pre-selected to today.  
+
+
+Add 2 butttons next to the caption of the task and subtask - one is + that currently shows in the menu and has option "Add Subtask", and the other is ++
++ will change it's meaning - it will add a subtask to the task but without asking openAI for suggestion after s
+
+
+Problem with display of completed tasks. 
+Completed tasks now related to periods not through completed_at field, but through date of the task set to. 
+We need to show completed task following way: when period is selected, than completed tasks should be displayed 
+which were completed in  that period. So if today is selected, than tasks which are completed today should be displayed, even if they were set to different time period to be worked on, or without any period.
+
+In some case we do not want to show completed tasks at all. In this case we should have a triangle next to the "Completed Task" caption, that will allow to toggle the display of completed tasks.  
+This setting will be stored per-user, so we need to add a new field to the users table - show_completed_tasks. 
+
+We need to create entities called "Lists" to group tasks inside them. 
+
+Let's make "Inline Edit" bunction - when title 
+

@@ -148,6 +148,12 @@ def initialize_database():
             print("Adding branch_id column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN branch_id VARCHAR(255)")
 
+        # Check if show_completed_tasks column exists (migration 10)
+        cursor.execute("SHOW COLUMNS FROM users LIKE 'show_completed_tasks'")
+        if not cursor.fetchone():
+            print("Adding show_completed_tasks column to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN show_completed_tasks INT DEFAULT 1")
+
         conn.commit()
         print("Database and tables initialized successfully.")
         
@@ -165,17 +171,20 @@ def get_or_create_user(user_info):
             cursor = conn.cursor(dictionary=True)
             
             # Check if user exists
-            cursor.execute("SELECT id FROM users WHERE google_id = %s", (user_info['sub'],))
+            cursor.execute("SELECT * FROM users WHERE google_id = %s", (user_info['sub'],))
             user = cursor.fetchone()
             
             if user:
-                return user['id']
+                return user
             else:
                 # Create new user
-                query = "INSERT INTO users (google_id, email, name) VALUES (%s, %s, %s)"
+                query = "INSERT INTO users (google_id, email, name, show_completed_tasks) VALUES (%s, %s, %s, 1)"
                 cursor.execute(query, (user_info['sub'], user_info['email'], user_info.get('name', '')))
                 conn.commit()
-                return cursor.lastrowid
+                # Fetch full user to return
+                user_id = cursor.lastrowid
+                cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+                return cursor.fetchone()
         except Error as e:
             print(f"Error managing user: {e}")
             return None

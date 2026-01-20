@@ -17,6 +17,9 @@
         cursor: pointer;
         padding: 2px 5px;
         border-radius: 4px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        font-weight: normal;
     }
 
     .task-title:hover {
@@ -329,18 +332,24 @@
     /* Search and Filter Styles */
     .search-filter-container {
         display: flex;
+        flex-direction: column;
+        /* Stack vertically for sidebar */
         gap: 10px;
-        margin: 5px 0 15px 0;
-        align-items: center;
-        background: #f8f9fa;
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #eee;
+        margin-bottom: 10px;
+        align-items: stretch;
+        /* Full width */
+        padding: 0;
+        /* Remove padding as it's inside sidebar-section */
+        background: transparent;
+        /* Remove background */
+        border: none;
+        /* Remove border */
     }
 
     .search-input {
-        width: 150px;
-        /* Drastically shortened */
+        width: 100%;
+        box-sizing: border-box;
+        /* Ensure padding doesn't overflow */
         padding: 8px 12px;
         border: 1px solid #ced4da;
         border-radius: 4px;
@@ -360,12 +369,13 @@
     }
 
     .filter-select {
+        width: 100%;
+        box-sizing: border-box;
         padding: 8px;
         border: 1px solid #ced4da;
         border-radius: 4px;
         background: white;
         font-size: 0.85em;
-        max-width: 130px;
     }
 
     .search-btn {
@@ -491,7 +501,8 @@
         color: #495057;
         text-decoration: none;
         border-radius: 4px;
-        font-size: 0.95em;
+        font-size: 13px;
+        font-family: Arial, sans-serif;
         transition: background 0.2s;
     }
 
@@ -589,6 +600,29 @@
 <div class="app-container">
     <aside class="sidebar">
         <div class="sidebar-section">
+            <h3>Search & Filter</h3>
+            <form action="/" method="GET" class="search-filter-container">
+                <input type="text" name="q" placeholder="Search..." value="{{ current_q or '' }}" class="search-input">
+
+                <select name="importance" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Importance</option>
+                    <option value="Important" {% if current_importance=='Important' %}selected{% endif %}>Important
+                    </option>
+                    <option value="Medium" {% if current_importance=='Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Normal" {% if current_importance=='Normal' %}selected{% endif %}>Normal</option>
+                </select>
+
+                <button type="submit" class="search-btn" title="Search">
+                    Search &#128269;
+                </button>
+
+                {% if current_q or current_tag or current_importance %}
+                <a href="/" class="clear-filters" style="text-align: center; display: block;">Clear All Filters</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="sidebar-section">
             <h3>Period Selection</h3>
             <ul class="sidebar-list">
                 <li class="sidebar-item">
@@ -637,25 +671,7 @@
 
     <main class="main-content">
         {# Search and Filtering UI #}
-        <form action="/" method="GET" class="search-filter-container">
-            <input type="text" name="q" placeholder="Search..." value="{{ current_q or '' }}" class="search-input">
 
-
-            <select name="importance" class="filter-select" onchange="this.form.submit()">
-                <option value="">All Importance</option>
-                <option value="Important" {% if current_importance=='Important' %}selected{% endif %}>Important</option>
-                <option value="Medium" {% if current_importance=='Medium' %}selected{% endif %}>Medium</option>
-                <option value="Normal" {% if current_importance=='Normal' %}selected{% endif %}>Normal</option>
-            </select>
-
-            <button type="submit" class="search-btn" title="Search">
-                &#128269; <!-- Search Icon (Magnifying Glass) -->
-            </button>
-
-            {% if current_q or current_tag or current_importance %}
-            <a href="/" class="clear-filters">Clear All</a>
-            {% endif %}
-        </form>
 
         {# Macro for Recursive Task Rendering #}
         {% macro render_task(task, level=0) %}
@@ -687,10 +703,18 @@
 
                     {# Title #}
                     <span class="task-title {% if task.status == 'completed' %}completed{% endif %}"
-                        onclick="toggleForm('edit-form-{{ task.id }}')" title="Click to edit"
-                        style="font-weight: bold; font-size: 1.05em;">
+                        onclick="toggleForm('edit-form-{{ task.id }}')" title="Click to edit">
                         {{ task.title }}
                     </span>
+
+                    {# Quick Add Buttons #}
+                    {% if task.status != 'completed' %}
+                    <button onclick="openSubtaskForm('{{ task.id }}', false)" class="icon-btn" title="Add Subtask"
+                        style="font-weight: bold; color: #555; font-family: monospace; font-size: 1.1em;">+</button>
+                    <button onclick="openSubtaskForm('{{ task.id }}', true)" class="icon-btn"
+                        title="Add Subtask (Auto AI)"
+                        style="font-weight: bold; color: #007bff; font-family: monospace; font-size: 1.1em;">++</button>
+                    {% endif %}
 
                     {# Importance Badge #}
                     {% if task.importance and task.importance != '' %}
@@ -958,31 +982,43 @@
             <div id="subtask-form-{{ task.id }}" style="display: none; margin-top: 5px; margin-left: 20px;">
                 <form action="/add_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
                     <input type="hidden" name="parent_id" value="{{ task.id }}">
-                    {% set parent_due_at = task.due_at.isoformat() if task.due_at and task.due_at is not string else
-                    task.due_at if task.due_at else '' %}
-                    <input type="hidden" name="due_at" id="due-at-sub-{{ task.id }}" value="{{ parent_due_at }}">
-                    <input type="text" name="title" placeholder="Subtask title" required style="width: 200px;">
-                    <button type="button" class="icon-btn" onclick="openTimeSetDialog('sub-{{ task.id }}')"
-                        title="Set Due Time">
-                        🕐
-                    </button>
-                    <span id="due-preview-sub-{{ task.id }}" class="due-preview" data-due-at="{{ parent_due_at }}"
-                        onclick="openTimeSetDialog('sub-{{ task.id }}')"
-                        style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
-                        <span class="due-preview-text"></span>
-                    </span>
-                    <input type="number" name="time_minutes" placeholder="Mins" style="width: 60px;">
-                    <select name="importance" style="font-size: 0.8em; padding: 2px;">
-                        <option value="">None</option>
-                        <option value="Important">Important</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Not important">Not important</option>
-                    </select>
-                    <button type="submit" style="font-size: 0.8em;">Add</button>
-                    <div style="display: none; width: 100%; margin-top: 5px;">
-                        <textarea name="description" placeholder="Subtask description (optional)" rows="3"
-                            style="width: 100%; font-size: 0.9em;"></textarea>
-                    </div>
+                    <input type="hidden" name="run_ai" id="run-ai-{{ task.id }}" value="false">
+                    {% set parent_due_at = '' %}
+                    {% if task.due_at %}
+                    {% if task.due_at is string %}
+                    {% set parent_due_at = task.due_at %}
+                    {% else %}
+                    {% if now and task.due_at < now %} {# Overdue -> Set to Today (Keep time as 00:00:00 for simplicity
+                        or matched to now) #}
+                        {% set parent_due_at = now.strftime('%Y-%m-%d 00:00:00') %}
+                        {% else %}
+                        {% set parent_due_at = task.due_at.isoformat() %}
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
+                        <input type="hidden" name="due_at" id="due-at-sub-{{ task.id }}" value="{{ parent_due_at }}">
+                        <input type="text" name="title" placeholder="Subtask title" required style="width: 200px;">
+                        <button type="button" class="icon-btn" onclick="openTimeSetDialog('sub-{{ task.id }}')"
+                            title="Set Due Time">
+                            🕐
+                        </button>
+                        <span id="due-preview-sub-{{ task.id }}" class="due-preview" data-due-at="{{ parent_due_at }}"
+                            onclick="openTimeSetDialog('sub-{{ task.id }}')"
+                            style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
+                            <span class="due-preview-text"></span>
+                        </span>
+                        <input type="number" name="time_minutes" placeholder="Mins" style="width: 60px;">
+                        <select name="importance" style="font-size: 0.8em; padding: 2px;">
+                            <option value="">None</option>
+                            <option value="Important">Important</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Not important">Not important</option>
+                        </select>
+                        <button type="submit" style="font-size: 0.8em;">Add</button>
+                        <div style="display: none; width: 100%; margin-top: 5px;">
+                            <textarea name="description" placeholder="Subtask description (optional)" rows="3"
+                                style="width: 100%; font-size: 0.9em;"></textarea>
+                        </div>
                 </form>
             </div>
 
@@ -1042,7 +1078,14 @@
         </div>
 
         <div style="margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 20px;">
-            <h2 style="color: #555;">Completed Tasks</h2>
+            <h2 style="color: #555; display: flex; align-items: center; gap: 10px;">
+                <a href="{{ url_for('toggle_completed_visibility') }}"
+                    style="text-decoration: none; color: inherit; font-size: 0.8em; cursor: pointer;">
+                    {% if user.show_completed_tasks %}▼{% else %}▶{% endif %}
+                </a>
+                Completed Tasks
+            </h2>
+            {% if user.show_completed_tasks %}
             <div class="task-list" style="opacity: 0.8;">
                 {% for task in tasks if task.status == 'completed' %}
                 {{ render_task(task) }}
@@ -1050,6 +1093,7 @@
                 <p style="color: #777; font-style: italic;">No completed tasks yet.</p>
                 {% endfor %}
             </div>
+            {% endif %}
         </div>
 
         <script>
@@ -1062,6 +1106,21 @@
             function toggleForm(id) {
                 const form = document.getElementById(id);
                 form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            }
+
+            function openSubtaskForm(taskId, runAi) {
+                const form = document.getElementById('subtask-form-' + taskId);
+                const aiInput = document.getElementById('run-ai-' + taskId);
+                const titleInput = form.querySelector('input[name="title"]');
+
+                if (aiInput) {
+                    aiInput.value = runAi ? 'true' : 'false';
+                }
+
+                form.style.display = 'block';
+                if (titleInput) {
+                    titleInput.focus();
+                }
             }
 
             function toggleHideMenu(id) {

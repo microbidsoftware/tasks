@@ -51,13 +51,19 @@ class SearchManager:
 
             # --- Period Filter ---
             if match and effective_period:
-                due_at = task.get('due_at')
-                if not due_at:
+                # Decide which date to check based on status
+                target_date = task.get('due_at')
+                if task.get('status') == 'completed':
+                     # For completed tasks, we care about when they were completed
+                     target_date = task.get('completed_at')
+                     # print(f"DEBUG: Checking completed task {task.get('title')} with completed_at {target_date} against {effective_period}")
+
+                if not target_date:
                     match = False
                 else:
-                    if isinstance(due_at, str):
+                    if isinstance(target_date, str):
                         try:
-                            due_at = datetime.fromisoformat(due_at.replace(' ', 'T'))
+                            target_date = datetime.fromisoformat(target_date.replace(' ', 'T'))
                         except ValueError:
                             match = False
                     
@@ -67,24 +73,25 @@ class SearchManager:
                         tomorrow_start = today_start + timedelta(days=1)
                         day_after_tomorrow = today_start + timedelta(days=2)
                         
-                        # Next Week means "not the current week but the next one"
-                        # Next Monday is the start of the next week
-                        # Python weekday: Mon=0, ..., Sun=6
                         days_to_next_monday = 7 - now.weekday()
                         next_week_start = today_start + timedelta(days=days_to_next_monday)
                         next_week_end = next_week_start + timedelta(days=7)
 
-                        # "This week" means next 7 days
                         seven_days_later = now + timedelta(days=7)
 
                         if effective_period == 'today':
-                            if not (due_at < tomorrow_start): match = False
+                            if task.get('status') == 'completed':
+                                # Completed Today = [Today Start, Tomorrow Start)
+                                if not (today_start <= target_date < tomorrow_start): match = False
+                            else:
+                                # Due Today = Overdue + Today (< Tomorrow Start)
+                                if not (target_date < tomorrow_start): match = False
                         elif effective_period == 'tomorrow':
-                            if not (tomorrow_start <= due_at < day_after_tomorrow): match = False
+                            if not (tomorrow_start <= target_date < day_after_tomorrow): match = False
                         elif effective_period == 'this_week':
-                            if not (now <= due_at < seven_days_later): match = False
+                            if not (now <= target_date < seven_days_later): match = False
                         elif effective_period == 'next_week':
-                            if not (next_week_start <= due_at < next_week_end): match = False
+                            if not (next_week_start <= target_date < next_week_end): match = False
 
             if match:
                 filtered_ids.add(task['id'])
@@ -126,6 +133,7 @@ class SearchManager:
                         else: break
                     else: break
             
-            return [tasks_map[tid] for tid in expanded_set]
+            # Preserve original sort order from all_tasks
+            return [t for t in all_tasks if t['id'] in expanded_set]
 
         return []
