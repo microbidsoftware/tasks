@@ -1,0 +1,349 @@
+{% macro render_task_row(task, level=0) %}
+{# Indentation #}
+<div style="flex-grow: 1; display: flex; align-items: center;">
+    {% if level > 0 %}
+    <span style="display: inline-block; width: {{ level * 20 }}px;"></span>
+    {% endif %}
+
+    {# Folding Toggle #}
+    {% if task.children %}
+    <span id="toggle-{{ task.id }}" class="folding-toggle {% if task.is_folded %}folded{% endif %}"
+        onclick="toggleTaskFolding('{{ task.id }}')">
+        ▼
+    </span>
+    {% else %}
+    <span style="display: inline-block; width: 15px; margin-right: 5px;"></span>
+    {% endif %}
+
+    {# Custom Checkbox #}
+    {% if task.status == 'completed' %}
+    <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="completion-checkbox"
+        style="border: 1px solid #28a745; background-color: #28a745;">
+        <span style="color: white; font-size: 10px; font-weight: bold; line-height: 1;">&#10003;</span>
+    </a>
+    {% else %}
+    <a href="{{ url_for('complete_task', task_id=task.id) }}" class="completion-checkbox"
+        style="transition: border-color 0.2s;" onmouseover="this.style.borderColor='#888'"
+        onmouseout="this.style.borderColor='#ccc'">
+    </a>
+    {% endif %}
+
+    {# Title (Link to Detail) #}
+    <a href="{{ url_for('task_detail', task_id=task.id) }}"
+        class="task-title {% if task.status == 'completed' %}completed{% endif %}"
+        style="text-decoration: none; color: inherit; cursor: pointer;">
+        {{ task.title }}
+    </a>
+
+    {# Quick Add Buttons #}
+    {% if task.status != 'completed' %}
+    <button onclick="openSubtaskForm('{{ task.id }}', false); event.preventDefault();" class="icon-btn"
+        title="Add Subtask" style="font-weight: bold; color: #555; font-family: monospace; font-size: 1.1em;">+</button>
+    <button onclick="openSubtaskForm('{{ task.id }}', true); event.preventDefault();" class="icon-btn"
+        title="Add Subtask (Auto AI)"
+        style="font-weight: bold; color: #007bff; font-family: monospace; font-size: 1.1em;">++</button>
+    {% endif %}
+
+    {# Importance Badge #}
+    {% if task.importance and task.importance != '' %}
+    <span class="badge 
+    {% if task.importance == 'Important' %}badge-important
+    {% elif task.importance == 'Medium' %}badge-medium
+    {% else %}badge-normal{% endif %}">
+        {{ task.importance }}
+    </span>
+    {% endif %}
+
+    {# Time Display #}
+    <span class="badge badge-time">
+        {% if task.time_minutes %}{{ task.time_minutes }}m{% else %}-{% endif %}
+        {% if task.children %} | Total: {{ task.branch_total }}m{% endif %}
+    </span>
+
+    {# Due At #}
+    {% if task.due_at %}
+    <span class="badge due-tag"
+        style="font-size: 0.8em; color: #856404; background: #fff3cd; border: 1px solid #ffeeba; {% if task.status != 'completed' %}cursor: pointer;{% endif %}"
+        title="Due at" data-due-at="{{ task.due_at.isoformat() if task.due_at is not string else task.due_at }}" {% if
+        task.status !='completed' %}
+        onclick="openTimeSetDialog('{{ task.id }}', undefined, true); event.stopPropagation();" {% endif %}> 🕐 <span
+            class="due-display-text"></span>
+    </span>
+    {% endif %}
+
+    {# Status #}
+    {% if task.status != 'pending' %}
+    <span class="badge badge-time" style="color: #666; background: transparent;">({{ task.status
+        }})</span>
+    {% endif %}
+
+    {# Tags #}
+    {% if task.tags %}
+    {% for tag in task.tags %}
+    <span class="tag-badge">
+        {{ tag.name }}
+        <a href="{{ url_for('remove_tag', task_id=task.id, tag_id=tag.id) }}" class="tag-remove"
+            title="Remove tag">x</a>
+    </span>
+    {% endfor %}
+    {% endif %}
+
+    {# Context Menu #}
+    <div class="menu-container">
+        <span class="menu-trigger" onclick="toggleTaskMenu('{{ task.id }}')">⋮</span>
+        <div id="menu-{{ task.id }}" class="menu-dropdown">
+            {# Edit #}
+            {% if task.status != 'completed' %}
+            <button onclick="toggleForm('edit-form-{{ task.id }}'); toggleTaskMenu('{{ task.id }}')" class="menu-item">
+                <span>&#9998;</span> Edit
+            </button>
+            {% else %}
+            <div class="menu-item disabled">
+                <span>&#9998;</span> Edit
+            </div>
+            {% endif %}
+
+            {# Complete/Undo #}
+            {% if task.status != 'completed' %}
+            <a href="{{ url_for('complete_task', task_id=task.id) }}" class="menu-item">
+                <span>&#10003;</span> Complete
+            </a>
+            {% else %}
+            <a href="{{ url_for('uncomplete_task', task_id=task.id) }}" class="menu-item">
+                <span>&#8617;</span> Undo Complete
+            </a>
+            {% endif %}
+
+            {# Add Subtask #}
+            {% if task.status != 'completed' %}
+            <button onclick="toggleForm('subtask-form-{{ task.id }}'); toggleTaskMenu('{{ task.id }}')"
+                class="menu-item">
+                <span>+</span> Add Subtask
+            </button>
+            {% else %}
+            <div class="menu-item disabled">
+                <span>+</span> Add Subtask
+            </div>
+            {% endif %}
+
+            <div class="menu-separator"></div>
+
+            {# Hide Submenu #}
+            <div class="menu-item submenu-trigger">
+                <span>&#128065;</span> Hide
+                <div class="submenu-content">
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 day') }}" class="menu-item">1 day</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='2 days') }}" class="menu-item">2
+                        days</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='3 days') }}" class="menu-item">3
+                        days</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 week') }}" class="menu-item">1
+                        week</a>
+                    <a href="{{ url_for('hide_task', task_id=task.id, duration='1 month') }}" class="menu-item">1
+                        month</a>
+                </div>
+            </div>
+
+            <div class="menu-separator"></div>
+
+            {# Delete #}
+            <a href="{{ url_for('delete_task', task_id=task.id) }}" class="menu-item danger">
+                <span>&#128465;</span> Delete
+            </a>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_task_forms(task, now) %}
+{# Edit Form (Hidden by default) #}
+<div id="edit-form-{{ task.id }}"
+    style="display: none; margin-top: 5px; margin-left: 20px; background: #fff3cd; padding: 5px;">
+    <form action="/update_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
+        <input type="hidden" name="task_id" value="{{ task.id }}">
+        <input type="hidden" name="due_at" id="due-at-{{ task.id }}"
+            value="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}">
+        <input type="text" name="title" value="{{ task.title }}" required style="width: 200px;">
+        <button type="button" class="icon-btn" onclick="openTimeSetDialog('{{ task.id }}')" title="Set Due Time">
+            🕐
+        </button>
+        <span id="due-preview-{{ task.id }}" class="due-preview"
+            data-due-at="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}"
+            onclick="openTimeSetDialog('{{ task.id }}')"
+            style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
+            <span class="due-preview-text"></span>
+        </span>
+        <select name="importance" style="font-size: 0.9em; padding: 2px;">
+            <option value="">None</option>
+            <option value="Important" {% if task.importance=='Important' %}selected{% endif %}>Important
+            </option>
+            <option value="Medium" {% if task.importance=='Medium' %}selected{% endif %}>Medium</option>
+            <option value="Not important" {% if task.importance=='Not important' %}selected{% endif %}>Not
+                important
+            </option>
+        </select>
+        <input type="number" name="time_minutes" value="{{ task.time_minutes if task.time_minutes else 0 }}"
+            style="width: 60px;">
+        <button type="submit" style="font-size: 0.8em; background-color: #ffc107; color: #000;">Save</button>
+        <div style="display: none; width: 100%; margin-top: 5px;">
+            <textarea name="description" placeholder="Description (optional)" rows="4"
+                style="width: 100%; font-size: 0.9em;">{{ task.description if task.description else '' }}</textarea>
+        </div>
+    </form>
+</div>
+
+{# Subtask Form (Hidden by default) #}
+<div id="subtask-form-{{ task.id }}" style="display: none; margin-top: 5px; margin-left: 20px;">
+    <form action="/add_task" method="POST" style="display: flex; gap: 5px; align-items: center;">
+        <input type="hidden" name="parent_id" value="{{ task.id }}">
+        <input type="hidden" name="run_ai" id="run-ai-{{ task.id }}" value="false">
+        {% set parent_due_at = '' %}
+        {% if task.due_at %}
+        {% if task.due_at is string %}
+        {% set parent_due_at = task.due_at %}
+        {% else %}
+        {% if now and task.due_at < now %} {% set parent_due_at=now.strftime('%Y-%m-%d 00:00:00') %} {% else %} {% set
+            parent_due_at=task.due_at.isoformat() %} {% endif %} {% endif %} {% endif %} <input type="hidden"
+            name="due_at" id="due-at-sub-{{ task.id }}" value="{{ parent_due_at }}">
+            <input type="text" name="title" placeholder="Subtask title" required style="width: 200px;">
+            <button type="button" class="icon-btn" onclick="openTimeSetDialog('sub-{{ task.id }}')"
+                title="Set Due Time">
+                🕐
+            </button>
+            <span id="due-preview-sub-{{ task.id }}" class="due-preview" data-due-at="{{ parent_due_at }}"
+                onclick="openTimeSetDialog('sub-{{ task.id }}')"
+                style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
+                <span class="due-preview-text"></span>
+            </span>
+            <input type="number" name="time_minutes" placeholder="Mins" style="width: 60px;">
+            <select name="importance" style="font-size: 0.8em; padding: 2px;">
+                <option value="">None</option>
+                <option value="Important">Important</option>
+                <option value="Medium">Medium</option>
+                <option value="Not important">Not important</option>
+            </select>
+            <button type="submit" style="font-size: 0.8em;">Add</button>
+            <div style="display: none; width: 100%; margin-top: 5px;">
+                <textarea name="description" placeholder="Subtask description (optional)" rows="3"
+                    style="width: 100%; font-size: 0.9em;"></textarea>
+            </div>
+    </form>
+</div>
+{% endmacro %}
+
+{% macro render_ai_suggestions(task) %}
+{% if task.ai_suggestion and task.status != 'completed' %}
+<div class="ai-suggestion-container"
+    style="font-size: 0.85em; color: #0056b3; margin-top: 5px; background: #f8fbff; padding: 8px; border-radius: 6px; border-left: 3px solid #007bff; display: flex; justify-content: space-between; align-items: flex-start;">
+    <div style="flex-grow: 1;">
+        {% if task.ai_suggestion is string %}
+        <span style="font-style: italic;">AI: {{ task.ai_suggestion }}</span>
+        {% else %}
+        <ul style="margin: 0; padding-left: 15px; list-style-type: circle;">
+            {% for item in task.ai_suggestion %}
+            {# Handle both legacy strings and new objects #}
+            {% set item_text = item.text if item is mapping else item %}
+            {% set is_done = item.done if item is mapping else false %}
+            {% set item_time = item.time if item is mapping else 0 %}
+            {% set suggestion_id = "sug-" ~ task.id ~ "-" ~ loop.index %}
+            <li
+                style="margin-bottom: 8px; display: flex; align-items: start; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
+                <div style="flex-grow: 1;">
+                    <div id="display-{{ suggestion_id }}" onclick="enableEdit('{{ suggestion_id }}')"
+                        style="cursor: pointer; padding: 2px;">
+                        <span style="{% if is_done %}text-decoration: line-through; color: #999;{% endif %}">{{
+                            item_text }}</span>
+                        {% if item_time %}<span style="color: #666; font-size: 0.9em; margin-left: 5px;">({{
+                            item_time }}m)</span>{% endif %}
+                    </div>
+                    <div id="edit-{{ suggestion_id }}" style="display: none;">
+                        <form action="{{ url_for('edit_suggestion_item', task_id=task.id) }}" method="POST"
+                            style="display: flex; gap: 4px; align-items: center;">
+                            <input type="hidden" name="old_text" value="{{ item_text }}">
+                            <input type="text" name="new_text" id="input-text-{{ suggestion_id }}"
+                                value="{{ item_text }}" style="flex-grow: 1; font-size: 0.9em;"
+                                onkeydown="handleSuggestionKey(event, '{{ suggestion_id }}')">
+                            <input type="number" name="new_time" id="input-time-{{ suggestion_id }}"
+                                value="{{ item_time }}" style="width: 50px; font-size: 0.9em;" placeholder="min">
+                            <button type="submit" class="icon-btn" style="color: green;" title="Save">&#10003;</button>
+                            <button type="button" class="icon-btn" style="color: red;"
+                                onclick="disableEdit('{{ suggestion_id }}')" title="Cancel">&times;</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 4px; margin-left: 10px; align-items: center;">
+                    {# Toggle/Checkmark Icon #}
+                    <a href="{{ url_for('toggle_suggestion_item', task_id=task.id, text=item_text) }}" class="icon-btn"
+                        style="color: #007bff; font-size: 1.1em;" title="Mark as Done">
+                        {% if is_done %}&#9111;{% else %}&#10003;{% endif %}
+                    </a>
+
+                    {# Add as Subtask Icon (WITH AI) #}
+                    <form action="/add_task" method="POST" style="display: inline;">
+                        <input type="hidden" name="parent_id" value="{{ task.id }}">
+                        <input type="hidden" name="title" value="{{ item_text }}">
+                        <input type="hidden" name="time_minutes" value="{{ item_time }}">
+                        <input type="hidden" name="from_suggestion_text" value="{{ item_text }}">
+                        <input type="hidden" name="due_at"
+                            value="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}">
+                        <button type="submit" class="icon-btn"
+                            style="color: #17a2b8; font-weight: bold; font-size: 1.2em; background: transparent;"
+                            title="Add as subtask (with AI suggestions)">+</button>
+                    </form>
+
+                    {# Save as Subtask Icon (WITHOUT AI) #}
+                    <form action="/add_task" method="POST" style="display: inline;">
+                        <input type="hidden" name="parent_id" value="{{ task.id }}">
+                        <input type="hidden" name="title" value="{{ item_text }}">
+                        <input type="hidden" name="time_minutes" value="{{ item_time }}">
+                        <input type="hidden" name="run_ai" value="false">
+                        <input type="hidden" name="from_suggestion_text" value="{{ item_text }}">
+                        <input type="hidden" name="due_at"
+                            value="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}">
+                        <button type="submit" class="icon-btn"
+                            style="color: #28a745; font-size: 1.2em; background: transparent;"
+                            title="Save as real task (no AI)">&#128190;</button>
+                    </form>
+
+                    {# Remove Item Icon #}
+                    <a href="{{ url_for('remove_suggestion_item', task_id=task.id, text=item_text) }}" class="icon-btn"
+                        style="color: #dc3545; font-size: 1.0em;" title="Remove Suggestion">&times;</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    <a href="{{ url_for('clear_suggestion', task_id=task.id) }}" class="icon-btn delete-icon clear-ai-btn"
+        style="font-size: 1.5em; margin-left: 15px; line-height: 1; color: #aaa; align-self: center;"
+        title="Clear All Suggestions">&times;&times;</a>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# Main recursive macro for list view #}
+{% macro render_task_hierarchy(task, now, level=0) %}
+<div class="task-item" style="padding: 4px; border-bottom: 1px solid #eee; margin-left: {{ level * 10 }}px;">
+    {{ render_task_row(task, level) }}
+
+    {# Description (Inline - Optional) #}
+    {% if task.description %}
+    <div style="font-size: 0.85em; color: #444; margin-top: 4px; white-space: pre-wrap; padding-left: 20px;">
+        {{ task.description }}
+    </div>
+    {% endif %}
+
+    {{ render_ai_suggestions(task) }}
+    {{ render_task_forms(task, now) }}
+
+    {# Render Children #}
+    {% if task.children %}
+    <div id="children-{{ task.id }}" class="children" style="{{ 'display: none;' if task.is_folded }}">
+        {% for child in task.children %}
+        {{ render_task_hierarchy(child, now, level + 1) }}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

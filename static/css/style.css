@@ -1,0 +1,477 @@
+/* Global Styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0 1rem;
+}
+
+h1 {
+    color: #333;
+}
+
+.auth-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+    padding: 5px 0;
+    border-bottom: none;
+}
+
+.auth-header h1 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+/* Sidebar Styles */
+.app-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    align-items: flex-start;
+}
+
+.sidebar {
+    flex: 0 0 200px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.sidebar-section {
+    margin-bottom: 25px;
+}
+
+.sidebar-section h3 {
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin-bottom: 5px;
+}
+
+.sidebar-link {
+    display: block;
+    padding: 6px 10px;
+    color: #495057;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: Arial, sans-serif;
+    transition: background 0.2s;
+}
+
+.sidebar-link:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+.sidebar-link.active {
+    background: #28a745;
+    color: white;
+    font-weight: bold;
+}
+
+.tag-badge-count {
+    font-size: 0.8em;
+    background: #dee2e6;
+    padding: 2px 6px;
+    border-radius: 10px;
+    color: #495057;
+    float: right;
+}
+
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.collapsible-content.open {
+    max-height: 500px;
+    /* Adjust as needed */
+}
+
+.toggle-icon {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.toggle-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.main-content {
+    flex: 1;
+}
+
+/* Task List Styles */
+.task-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: #fff;
+    padding: 8px;
+    /* Removed border as requested */
+    /* border: 1px solid #ddd; */
+    border-radius: 4px;
+    gap: 5px;
+}
+
+.task-title {
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.task-title:hover {
+    background-color: #f9f9f9;
+}
+
+/* Checkbox Styles */
+/* Assuming custom checkbox or input[type=checkbox] */
+/* If using the standard input, styling is limited. 
+   If using a custom span/div as checkbox (which seems to be the case based on macros or snippets seen), 
+   we target that. The macro likely uses a specific class or structure. 
+   Let's assume standard behavior or the class seen in macros.html if any. 
+   Found earlier: .custom-checkbox or similar logic not explicitly seen in the css dump above 
+   but mentioned in user request. 
+   However, user said "checkbox should user 1px border and 1px padding".
+   If it's a real input checkbox, we might need appearance:none or similar.
+   If it's a div/span:
+*/
+
+.completion-checkbox {
+    /* Adjusting based on user request */
+    border: 1px solid #ccc;
+    padding: 1px;
+    border-radius: 4px;
+    /* Gentle rounding as previously requested */
+    width: 14px;
+    height: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 2px;
+    /* "reduce in 10px" logic - tight spacing */
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Icon Buttons */
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+    color: #555;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+.icon-btn:hover {
+    opacity: 0.8;
+}
+
+.edit-icon {
+    color: #ffc107;
+}
+
+.delete-icon {
+    color: #dc3545;
+}
+
+.subtask-icon {
+    color: #17a2b8;
+    font-size: 1.0em;
+    font-weight: bold;
+}
+
+.icon-disabled {
+    color: #ccc !important;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Menus & Dropdowns */
+.menu-container {
+    position: relative;
+    margin-left: auto;
+    /* Push to right */
+}
+
+.menu-trigger {
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 1.2em;
+    color: #666;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.menu-trigger:hover {
+    background-color: #f0f0f0;
+}
+
+.menu-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    border-radius: 6px;
+    padding: 5px 0;
+    border: 1px solid #eee;
+}
+
+.menu-dropdown.show {
+    display: block;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 15px;
+    text-decoration: none;
+    color: #333;
+    font-size: 0.9em;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.menu-item:hover {
+    background-color: #f8f9fa;
+}
+
+.menu-item.danger {
+    color: #dc3545;
+}
+
+.menu-item.disabled {
+    color: #aaa;
+    pointer-events: none;
+}
+
+.menu-separator {
+    height: 1px;
+    background-color: #eee;
+    margin: 4px 0;
+}
+
+/* Badges */
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e2f0d9;
+    color: #385723;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-left: 5px;
+    border: 1px solid #c5e0b4;
+}
+
+.tag-remove {
+    margin-left: 5px;
+    color: #c00000;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.tag-remove:hover {
+    color: #ff0000;
+}
+
+.badge {
+    font-size: 0.8em;
+    margin-left: 5px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: white;
+}
+
+.badge-important {
+    background: #dc3545;
+}
+
+.badge-medium {
+    background: #ffc107;
+    color: black;
+}
+
+.badge-normal {
+    background: #6c757d;
+}
+
+.badge-time {
+    background: #f0f0f0;
+    color: #555;
+}
+
+/* Search & Filter - needed for Sidebar */
+.search-filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: stretch;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.filter-select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.85em;
+}
+
+.search-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-btn:hover {
+    background: #5a6268;
+}
+
+.clear-filters {
+    font-size: 0.85em;
+    color: #6c757d;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.clear-filters:hover {
+    color: #dc3545;
+    text-decoration: underline;
+}
+
+/* Settings Dropdown */
+.settings-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: 15px;
+}
+
+.settings-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 5px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.settings-btn:hover {
+    color: #333;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.dropdown-menu a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: 0.95em;
+}
+
+.dropdown-menu a:hover {
+    background-color: #f1f1f1;
+}
+
+.show-dropdown {
+    display: block;
+}
+
+/* Folding Toggle */
+.folding-toggle {
+    cursor: pointer;
+    display: inline-block;
+    width: 15px;
+    color: #999;
+    font-size: 0.8em;
+    user-select: none;
+    transition: transform 0.2s;
+    margin-right: 5px;
+}
+
+.folding-toggle:hover {
+    color: #333;
+}
+
+.folding-toggle.folded {
+    transform: rotate(-90deg);
+}
+
+/* AI Suggestions */
+.ai-suggestion-container .clear-ai-btn {
+    visibility: hidden;
+}
+
+.ai-suggestion-container:hover .clear-ai-btn {
+    visibility: visible;
+}

@@ -183,4 +183,21 @@ We need to create entities called "Lists" to group tasks inside them.
 
 Let's make "Inline Edit" bunction - when title 
 
-test
+when adding a a task or subtask  there is a combobox with 
+
+Currently the list of the tasks is taking all space on the right of the left column. 
+/*We should split this  area of the right column (call it main tasks view) into two equal parts vertically, and the list of the tasks should take only one part, 
+and the other part should be empty. 
+When there is click on the task, than the task should be displayed in the other part of the main tasks view, that will be called single task view.
+in single task view we'll show at the top the title of the task, and the description of the task, and below that we'll show the subtasks of the task. */
+
+We should make a new page called "Task" that will be displayed when there is click on the task. 
+On that page we'll show the task in the top, and below that we'll show the description of the task, and below that we'll show the subtasks of the task. 
+split each of the parts in separate template as it will be used in other places as well.
+
+When opening single task view, show on the left the same menu as it was on list of tasks. 
+
+Make cosmetic changes in the list of tasks view:
+1) checkbox should user 1px border and 1px padding.
+2) reduce in 50% space between the checkbox and the task title
+3) Now tasks are surrounded by a border. Remove that border. 

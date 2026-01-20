@@ -68,12 +68,122 @@
             border: none;
             cursor: pointer;
         }
-    </style>
-</head>
 
-<div class="container">
+        /* Custom Calendar Styles */
+        .calendar-container {
+            font-family: sans-serif;
+            width: 100%;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            margin-top: 5px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-top: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+            padding: 2px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .calendar-day:hover {
+            background: #f0f0f0;
+        }
+
+        .calendar-day.selected {
+            background: #28a745;
+            color: white;
+        }
+
+        .calendar-day.today {
+            border: 1px solid #28a745;
+        }
+
+        .calendar-day.prev-next {
+            color: #ccc;
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
     {% block content %}{% endblock %}
-</div>
-</body>
+    </div>
+
+    <!-- TaskTimeSet Dialog (Global) -->
+    <div id="task-time-set-dialog"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div
+            style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); min-width: 320px;">
+            <h3 style="margin-top: 0; margin-bottom: 10px;">Set Due Time</h3>
+
+            <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;">
+                <button onclick="setDateToday()" class="icon-btn"
+                    style="font-size: 0.9em; background: #e2e6ea; padding: 4px 8px; border-radius: 4px; color: #333;">Today</button>
+                <button onclick="shiftDate(1, 0)" class="icon-btn"
+                    style="font-size: 0.9em; background: #e2e6ea; padding: 4px 8px; border-radius: 4px; color: #333;">+1</button>
+                <button onclick="shiftDate(7, 0)" class="icon-btn"
+                    style="font-size: 0.9em; background: #e2e6ea; padding: 4px 8px; border-radius: 4px; color: #333;">+7</button>
+                <button onclick="shiftDate(0, 1)" class="icon-btn"
+                    style="font-size: 0.9em; background: #e2e6ea; padding: 4px 8px; border-radius: 4px; color: #333;">+1M</button>
+            </div>
+
+            <div id="calendar-view" class="calendar-container">
+                <div class="calendar-header">
+                    <button type="button" onclick="changeMonth(-1)" class="icon-btn">&lt;</button>
+                    <span id="calendar-month-year"></span>
+                    <button type="button" onclick="changeMonth(1)" class="icon-btn">&gt;</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid">
+                    <!-- Days will be injected here -->
+                </div>
+            </div>
+
+            <input type="hidden" id="due-date-input">
+
+            <div style="margin-top: 15px; margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.9em; margin-bottom: 5px;">Time</label>
+                <input type="time" id="due-time-input"
+                    style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="clearTimeSet()"
+                    style="padding: 8px 15px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer;">Clear</button>
+                <button onclick="closeTimeSetDialog()"
+                    style="padding: 8px 15px; border: 1px solid #ccc; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button onclick="saveTimeSet()"
+                    style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/calendar.js') }}?v=4"></script>
+    {% block scripts %}{% endblock %}
+    </body>
 
 </html>

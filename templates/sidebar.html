@@ -1,0 +1,74 @@
+<aside class="sidebar">
+    <div class="sidebar-section">
+        <h3>Search & Filter</h3>
+        <form action="/" method="GET" class="search-filter-container">
+            <input type="text" name="q" placeholder="Search..." value="{{ current_q or '' }}" class="search-input">
+
+            <select name="importance" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Importance</option>
+                <option value="Important" {% if current_importance=='Important' %}selected{% endif %}>Important
+                </option>
+                <option value="Medium" {% if current_importance=='Medium' %}selected{% endif %}>Medium</option>
+                <option value="Normal" {% if current_importance=='Normal' %}selected{% endif %}>Normal</option>
+            </select>
+
+            <button type="submit" class="search-btn" title="Search">
+                Search &#128269;
+            </button>
+
+            {% if current_q or current_tag or current_importance %}
+            <a href="/" class="clear-filters" style="text-align: center; display: block;">Clear All Filters</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="sidebar-section">
+        <h3>Period Selection</h3>
+        <ul class="sidebar-list">
+            <li class="sidebar-item">
+                <a href="{{ url_for('index', period='today') }}"
+                    class="sidebar-link {{ 'active' if current_period == 'today' or not current_period }}">Today</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('index', period='tomorrow') }}"
+                    class="sidebar-link {{ 'active' if current_period == 'tomorrow' }}">Tomorrow</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('index', period='this_week') }}"
+                    class="sidebar-link {{ 'active' if current_period == 'this_week' }}">This Week</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('index', period='next_week') }}"
+                    class="sidebar-link {{ 'active' if current_period == 'next_week' }}">Next Week</a>
+            </li>
+            <li class="sidebar-item">
+                <a href="{{ url_for('index', period='all') }}"
+                    class="sidebar-link {{ 'active' if current_period == 'all' }}">All</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-section">
+        <h3>
+            Tags Selection
+            <span class="toggle-icon" onclick="toggleSidebarSection('tags-collapsible', this)">▼</span>
+        </h3>
+        <div id="tags-collapsible" class="collapsible-content open">
+            <ul class="sidebar-list">
+                {% if stats and stats.tag_summary %}
+                {% for tag_name, count in stats.tag_summary.items() %}
+                <li class="sidebar-item">
+                    <a href="{{ url_for('index', tag=tag_name) }}"
+                        class="sidebar-link {{ 'active' if current_tag == tag_name }}">
+                        #{{ tag_name }}
+                        <span class="tag-badge-count">{{ count }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+                {% else %}
+                <li class="sidebar-item" style="color: #999; font-size: 0.9em; padding-left: 10px;">No tags found.</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</aside>

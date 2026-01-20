@@ -186,19 +186,101 @@ class TaskManager:
                 
                 stats = InfoPanelManager.calculate_stats(all_tasks)
                 return tasks_tree, stats
-                        
+
             except Error as e:
                 print(f"Error listing tasks: {e}")
             finally:
-                cursor.close()
-                conn.close()
+                if conn and conn.is_connected():
+                    cursor.close()
+                    conn.close()
         
-        # Default stats object to avoid template errors
-        default_stats = {
-            'total_time': 0,
-            'importance_summary': {'Important': 0, 'Medium': 0, 'Normal': 0},
-            'tag_summary': {}
-        }
+        return [], InfoPanelManager.calculate_stats([])
+
+    def get_task_details(self, user_id, task_id):
+        """
+        Fetches a specific task and its hierarchical children.
+        """
+        try:
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor(dictionary=True)
+                
+                # 1. Fetch the main task
+                query_task = """
+                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at, is_folded, level, branch_id
+                    FROM tasks 
+                    WHERE id = %s AND user_id = %s
+                """
+                cursor.execute(query_task, (task_id, user_id))
+                task = cursor.fetchone()
+                
+                if not task:
+                    return None, []
+
+                # Parse AI Suggestion
+                if task.get('ai_suggestion'):
+                    try:
+                        import json
+                        if isinstance(task['ai_suggestion'], str) and (task['ai_suggestion'].startswith('[') or task['ai_suggestion'].startswith('{')):
+                             task['ai_suggestion'] = json.loads(task['ai_suggestion'])
+                    except:
+                        pass
+                
+                # 2. Fetch all descendants (naive approach: fetch all user tasks and build tree, effectively reusing list_tasks logic but filtering for this branch)
+                # For efficiency/simplicity reusing list_tasks logic but we need to find the subtree
+                
+                # Alternatively, fetch all tasks for user and filter in python
+                query_all = """
+                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at, is_folded, level, branch_id, completed_at
+                    FROM tasks 
+                    WHERE user_id = %s 
+                    ORDER BY (status = 'completed') ASC, created_at DESC
+                """
+                cursor.execute(query_all, (user_id,))
+                all_tasks = cursor.fetchall()
+                
+                # Parse JSON for all
+                import json
+                for t in all_tasks:
+                     if t.get('ai_suggestion') and isinstance(t['ai_suggestion'], str) and (t['ai_suggestion'].startswith('[') or t['ai_suggestion'].startswith('{')):
+                        try:
+                            t['ai_suggestion'] = json.loads(t['ai_suggestion'])
+                        except:
+                            pass
+                
+                # Build Map
+                tasks_map = {t['id']: t for t in all_tasks}
+                for t in all_tasks:
+                    t['children'] = []
+                    
+                # Build Tree
+                root_children = []
+                for t in all_tasks:
+                    pid = t['parent_id']
+                    if pid and pid in tasks_map:
+                        tasks_map[pid]['children'].append(t)
+                    elif pid == task_id: 
+                         # Direct child of our target task (if we only fetched descendants this would be easier, 
+                         # but since we fetched all, we look for nodes whose parent is task_id)
+                         root_children.append(t)
+                
+                # Wait, if we fetch ALL tasks, we can just look up task_id in tasks_map and get its children
+                # But we already fetched singular task separately to ensure it exists and get it even if hidden? 
+                # (Logic above filters hide_until, maybe we want to see hidden subtasks in detail view? Assuming yes for now)
+                
+                target_node = tasks_map.get(task_id)
+                children = target_node['children'] if target_node else []
+                
+                # Recalculate branch totals if needed (list_tasks does it)
+                # For now, return the children list
+                
+                conn.close()
+                return task, children
+
+        except Exception as e:
+            print(f"Error fetching task details: {e}")
+            return None, []
+
     def backfill_tree_fields(self):
         """Calculate and update level and branch_id for all tasks."""
         conn = get_db_connection()

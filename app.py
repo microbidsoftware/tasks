@@ -63,6 +63,39 @@ def index():
                            current_period=period_filter,
                            now=datetime.datetime.now())
 
+@app.route('/task/<int:task_id>')
+def task_detail(task_id):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+        
+    user = session['user']
+    manager = TaskManager()
+    
+    # Get Task and its children
+    task, children = manager.get_task_details(user['id'], task_id)
+    
+    # Needs stats for sidebar
+    # We can perform a lightweight list_tasks to get stats
+    # or expose a specific get_stats method. 
+    # For now, let's just reuse list_tasks(user_id) as it's the simplest way to ensure consistency
+    # Only need to fetch them if we want to show the sidebar correctly
+    _, stats = manager.list_tasks(user['id'])
+    
+    if not task:
+        # Task not found or not owned by user
+        return redirect(url_for('index'))
+        
+    return render_template('task_detail.html',
+                           user=user,
+                           task=task,
+                           children=children,
+                           stats=stats,
+                           current_q=request.args.get('q'), 
+                           current_tag=request.args.get('tag'), 
+                           current_importance=request.args.get('importance'), 
+                           current_period=request.args.get('period'),
+                           now=datetime.datetime.now())
+
 @app.route('/dashboard')
 def dashboard():
     user = session.get('user')

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% from "macros.html" import render_task_row, render_task_hierarchy %}
+
+{% block content %}
+<div class="auth-header" style="justify-content: flex-end; padding: 10px 0;">
+    <div style="display: flex; align-items: center;">
+        {% if user %}
+        <span>Welcome, <strong>{{ user.name }}</strong></span>
+        {% if user.picture %}
+        <img src="{{ user.picture }}" alt="Avatar"
+            style="width: 30px; border-radius: 50%; vertical-align: middle; margin: 0 5px;">
+        {% endif %}
+
+        <div class="settings-dropdown">
+            <button class="settings-btn" onclick="toggleSettingsMenu()" title="Settings">
+                &#9881; <!-- Gear Icon -->
+            </button>
+            <div id="settings-menu" class="dropdown-menu">
+                <a href="{{ url_for('dashboard') }}">Information</a>
+            </div>
+        </div>
+
+        <a href="{{ url_for('logout') }}" class="icon-btn" title="Logout"
+            style="margin-left: 15px; color: #dc3545; font-size: 1.2em;">&#128682;</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if user %}
+<div class="app-container">
+    {% include 'sidebar.html' %}
+
+    <main class="main-content">
+        <div style="margin-bottom: 20px;">
+            <a href="{{ url_for('index') }}" style="text-decoration: none; color: #007bff;">&larr; Back to Tasks</a>
+        </div>
+
+        {# Main Task Header #}
+        <div
+            style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+            <h1 style="margin-top: 0; margin-bottom: 15px; font-size: 1.8em; color: #333;">
+                {{ task.title }}
+            </h1>
+
+            {# Use the macro specifically for the row controls (status, menu, badges) #}
+            <div
+                style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                {{ render_task_row(task, 0) }}
+            </div>
+
+            {# Detailed Description #}
+            {% if task.description %}
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #666; font-size: 0.9em; text-transform: uppercase;">Description</h3>
+                <div
+                    style="white-space: pre-wrap; color: #444; background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    {{ task.description }}</div>
+            </div>
+            {% endif %}
+
+            {# AI Suggestions #}
+            {% if task.ai_suggestion %}
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #666; font-size: 0.9em; text-transform: uppercase;">AI Suggestions</h3>
+                {% from "macros.html" import render_ai_suggestions %}
+                {{ render_ai_suggestions(task) }}
+            </div>
+            {% endif %}
+        </div>
+
+        {# Subtasks Section #}
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2
+                style="margin-top: 0; margin-bottom: 20px; font-size: 1.4em; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+                Subtasks
+            </h2>
+
+            {# Subtask Form #}
+            <div style="margin-bottom: 20px;">
+                {% from "macros.html" import render_task_forms %}
+
+                <form action="/add_task" method="POST"
+                    style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <input type="hidden" name="parent_id" value="{{ task.id }}">
+                    <input type="hidden" name="due_at" id="due-at-root" value="">
+
+                    <input type="text" name="title" placeholder="Add a subtask..." required
+                        style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+
+                    <button type="button" class="icon-btn" onclick="openTimeSetDialog('root')"
+                        title="Set Due Time">🕐</button>
+                    <span id="due-preview-root" class="due-preview" onclick="openTimeSetDialog('root')"
+                        style="font-size: 0.85em; background: #fff3cd; padding: 4px 8px; border-radius: 4px; display: none; cursor: pointer;">
+                        <span class="due-preview-text"></span>
+                    </span>
+
+                    <input type="number" name="time_minutes" placeholder="Min" style="width: 60px; padding: 8px;">
+
+                    <button type="submit"
+                        style="padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
+                </form>
+            </div>
+
+            {# Children List #}
+            <div class="task-list">
+                {% if children %}
+                {% for child in children %}
+                {{ render_task_hierarchy(child, now, 0) }}
+                {% endfor %}
+                {% else %}
+                <p style="color: #777; font-style: italic;">No subtasks yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Global variable for calendar.js (if we want to use defaults in detail view too, though sidebar periods link to index)
+    // We can just pass the period or default to 'today'
+    window.globalCurrentPeriod = "{{ current_period or 'today' }}";
+</script>
+{% endblock %}
