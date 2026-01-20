@@ -36,17 +36,39 @@
         </div>
 
         {# Main Task Header #}
-        <div
-            style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
-            <h1 style="margin-top: 0; margin-bottom: 15px; font-size: 1.8em; color: #333;">
-                {{ task.title }}
-            </h1>
+        {# Main Task Header - Title integrated into row below #}
+        <div style="margin-bottom: 20px;">
 
             {# Use the macro specifically for the row controls (status, menu, badges) #}
-            <div
+            <div class="main-task-row-container"
                 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
                 {{ render_task_row(task, 0) }}
+
+                {# Hidden Form for Date Picker (REQUIRED for calendar.js) #}
+                <form id="form-update-{{ task.id }}" action="/update_task" method="POST" style="display: none;">
+                    <input type="hidden" name="task_id" value="{{ task.id }}">
+                    <input type="hidden" name="due_at" id="due-at-{{ task.id }}"
+                        value="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}">
+                    <input type="hidden" name="title" value="{{ task.title }}">
+                </form>
             </div>
+
+            <style>
+                /* Custom styles for the main task in detail view */
+                .main-task-row-container .task-title {
+                    color: red !important;
+                    font-size: 1.5em !important;
+                    font-weight: bold !important;
+                    cursor: default !important;
+                    pointer-events: none !important;
+                    text-decoration: none !important;
+                }
+
+                /* Hide the checkbox for the main title if desired? User didn't ask, but "Title of main task red" implies focus. 
+                   User said "Move next to it all the buttons...". Checkbox is usually left of title. 
+                   I will leave checkbox unless asked to remove.
+                */
+            </style>
 
             {# Detailed Description #}
             {% if task.description %}
@@ -69,11 +91,8 @@
         </div>
 
         {# Subtasks Section #}
-        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h2
-                style="margin-top: 0; margin-bottom: 20px; font-size: 1.4em; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-                Subtasks
-            </h2>
+        <div style="margin-top: 20px;">
+            {# Subtasks Header Removed #}
 
             {# Subtask Form #}
             <div style="margin-bottom: 20px;">
@@ -107,8 +126,6 @@
                 {% for child in children %}
                 {{ render_task_hierarchy(child, now, 0) }}
                 {% endfor %}
-                {% else %}
-                <p style="color: #777; font-style: italic;">No subtasks yet.</p>
                 {% endif %}
             </div>
         </div>

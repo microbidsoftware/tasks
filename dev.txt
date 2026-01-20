@@ -201,3 +201,9 @@ Make cosmetic changes in the list of tasks view:
 1) checkbox should user 1px border and 1px padding.
 2) reduce in 50% space between the checkbox and the task title
 3) Now tasks are surrounded by a border. Remove that border. 
+
+
+In the Single Task View, make the following changes:
+1) Delete title Subtasks
+2) Delete text No subtasks yet. - if not subtasks are added.
+3) Make title of main task red. Move next to it all the buttons that are present next to the title of the main task in the list of tasks.
