@@ -12,7 +12,7 @@ class TaskManager:
     def __init__(self):
         self.ai_service = AIService()
 
-    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None, description=None, run_ai=True, due_at=None):
+    def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None, description=None, run_ai=True, due_at=None, from_suggestion_text=None):
         """Add a new task (or subtask) with optional time estimation, importance, description, and due time."""
         conn = get_db_connection()
         if conn:
@@ -20,7 +20,21 @@ class TaskManager:
                 # Call AI
                 ai_suggestion_json = None
                 if run_ai:
-                    ai_suggestions = self.ai_service.get_task_suggestion(title)
+                    branch_context = None
+                    current_leaf_title = None
+                    
+                    if parent_id:
+                        try:
+                            # Use CTask to get branch context
+                            parent_ctask = CTask(user_id, int(parent_id))
+                            branch_structure = parent_ctask.get_full_task_structure_json()
+                            if branch_structure:
+                                branch_context = json.dumps(branch_structure)
+                            current_leaf_title = title
+                        except Exception as e:
+                            print(f"Error fetching branch context: {e}")
+
+                    ai_suggestions = self.ai_service.get_task_suggestion(title, branch_context, current_leaf_title)
                     ai_suggestion_json = json.dumps(ai_suggestions) if ai_suggestions else None
                 
                 cursor = conn.cursor()
@@ -35,18 +49,45 @@ class TaskManager:
                 tags_to_add = extract_tags_from_text(title)
                 
                 # Clean title before saving
+                # Clean title before saving
                 title = strip_tags_from_text(title)
+
+                # Determine Level and Branch ID
+                level = 0
+                branch_id = None
                 
-                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance, description, due_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion_json, user_id, importance, description, due_at))
+                if parent_id:
+                    # Fetch parent's level and branch_id
+                    cursor.execute("SELECT level, branch_id FROM tasks WHERE id = %s", (parent_id,))
+                    parent = cursor.fetchone()
+                    if parent:
+                        level = parent[0] + 1
+                        branch_id = parent[1]
+
+                query = "INSERT INTO tasks (title, status, parent_id, time_minutes, ai_suggestion, user_id, importance, description, due_at, level, branch_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                cursor.execute(query, (title, 'pending', parent_id, time_minutes, ai_suggestion_json, user_id, importance, description, due_at, level, branch_id))
                 conn.commit()
                 task_id = cursor.lastrowid
+
+                # If root task, branch_id is its own ID
+                if not parent_id:
+                    branch_id = str(task_id)
+                    cursor.execute("UPDATE tasks SET branch_id = %s WHERE id = %s", (branch_id, task_id))
+                    conn.commit()
                 
                 # Handle Tags
                 if tags_to_add:
                     ctask = CTask(user_id, task_id)
                     for tag in tags_to_add:
                         ctask.add_tag(tag)
+
+                # Remove suggestion from parent if this was converted from one
+                if parent_id and from_suggestion_text:
+                    try:
+                        parent_ctask = CTask(user_id, int(parent_id))
+                        parent_ctask.remove_ai_suggestion(from_suggestion_text)
+                    except Exception as e:
+                        print(f"Error removing suggestion from parent: {e}")
 
                 print(f"Task '{title}' added successfully.")
                 return True
@@ -67,7 +108,7 @@ class TaskManager:
                 cursor = conn.cursor(dictionary=True)
                 # Sort: Pending (0) first, Completed (1) last. Then by created_at.
                 query = """
-                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at 
+                    SELECT id, title, status, created_at, parent_id, time_minutes, ai_suggestion, importance, description, hide_until, due_at, is_folded, level, branch_id
                     FROM tasks 
                     WHERE user_id = %s 
                     AND (hide_until IS NULL OR hide_until <= NOW())
@@ -138,7 +179,6 @@ class TaskManager:
 
                 tasks_tree = root_tasks
                 
-                # Calculate Summary Stats
                 stats = InfoPanelManager.calculate_stats(all_tasks)
                 return tasks_tree, stats
                         
@@ -147,7 +187,60 @@ class TaskManager:
             finally:
                 cursor.close()
                 conn.close()
-        return [], {}
+        
+        # Default stats object to avoid template errors
+        default_stats = {
+            'total_time': 0,
+            'importance_summary': {'Important': 0, 'Medium': 0, 'Normal': 0},
+            'tag_summary': {}
+        }
+    def backfill_tree_fields(self):
+        """Calculate and update level and branch_id for all tasks."""
+        conn = get_db_connection()
+        if not conn:
+            return False
+            
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT id, parent_id FROM tasks")
+            all_tasks = cursor.fetchall()
+            
+            tasks_map = {t['id']: t for t in all_tasks}
+            updates = []
+
+            for task in all_tasks:
+                level = 0
+                current = task
+                path = []
+                
+                # Traverse up to find root
+                while current['parent_id']:
+                    path.append(current['id'])
+                    parent = tasks_map.get(current['parent_id'])
+                    if not parent:
+                        break # Orphaned task
+                    current = parent
+                    level += 1
+                
+                # current is now root
+                branch_id = str(current['id'])
+                updates.append((level, branch_id, task['id']))
+            
+            # Batch update
+            cursor.close() # Switch to normal cursor for updates
+            cursor = conn.cursor()
+            update_query = "UPDATE tasks SET level = %s, branch_id = %s WHERE id = %s"
+            cursor.executemany(update_query, updates)
+            conn.commit()
+            print(f"Backfilled {len(updates)} tasks with tree fields.")
+            return True
+            
+        except Error as e:
+            print(f"Error backfilling tree fields: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
 
     def complete_task(self, user_id, task_id):
         """Mark a task AND all its descendants as completed."""
@@ -329,139 +422,64 @@ class TaskManager:
 
     def remove_ai_suggestion_item(self, user_id, task_id, item_text):
         """Remove a specific item from the AI suggestion list."""
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor(dictionary=True)
-                cursor.execute("SELECT ai_suggestion FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
-                row = cursor.fetchone()
-                if row and row['ai_suggestion']:
-                    suggestions = json.loads(row['ai_suggestion'])
-                    if isinstance(suggestions, list):
-                        # Handle legacy strings and new objects
-                        new_suggestions = []
-                        for s in suggestions:
-                            text = s['text'] if isinstance(s, dict) else s
-                            if text != item_text:
-                                new_suggestions.append(s)
-                        
-                        query = "UPDATE tasks SET ai_suggestion = %s WHERE id = %s AND user_id = %s"
-                        cursor.execute(query, (json.dumps(new_suggestions), task_id, user_id))
-                        conn.commit()
-                        return True
-            except (Error, json.JSONDecodeError) as e:
-                print(f"Error removing AI item: {e}")
-            finally:
-                cursor.close()
-                conn.close()
+        ctask = CTask(user_id, task_id)
+        if ctask.fields:
+            return ctask.remove_ai_suggestion(item_text)
         return False
 
     def toggle_ai_suggestion_item(self, user_id, task_id, item_text):
         """Toggle the completion status of a specific suggestion item."""
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor(dictionary=True)
-                cursor.execute("SELECT ai_suggestion FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
-                row = cursor.fetchone()
-                if row and row['ai_suggestion']:
-                    suggestions = json.loads(row['ai_suggestion'])
-                    if isinstance(suggestions, list):
-                        for s in suggestions:
-                            if isinstance(s, dict) and s['text'] == item_text:
-                                s['done'] = not s.get('done', False)
-                            elif isinstance(s, str) and s == item_text:
-                                # Convert legacy string to object on toggle
-                                index = suggestions.index(s)
-                                suggestions[index] = {"text": s, "done": True}
-                        
-                        query = "UPDATE tasks SET ai_suggestion = %s WHERE id = %s AND user_id = %s"
-                        cursor.execute(query, (json.dumps(suggestions), task_id, user_id))
-                        conn.commit()
-                        return True
-            except (Error, json.JSONDecodeError) as e:
-                print(f"Error toggling AI item: {e}")
-            finally:
-                cursor.close()
-                conn.close()
+        ctask = CTask(user_id, task_id)
+        if ctask.fields:
+            return ctask.toggle_ai_suggestion(item_text)
         return False
 
     def edit_ai_suggestion_item(self, user_id, task_id, old_text, new_text, new_time=None):
         """Update the text and optionally time of a specific suggestion item."""
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor(dictionary=True)
-                cursor.execute("SELECT ai_suggestion FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
-                row = cursor.fetchone()
-                if row and row['ai_suggestion']:
-                    suggestions = json.loads(row['ai_suggestion'])
-                    if isinstance(suggestions, list):
-                        updated = False
-                        for s in suggestions:
-                            text = s['text'] if isinstance(s, dict) else s
-                            if text == old_text:
-                                if isinstance(s, dict):
-                                    s['text'] = new_text
-                                    if new_time is not None:
-                                        try:
-                                            s['time'] = int(new_time)
-                                        except (ValueError, TypeError):
-                                            pass
-                                else:
-                                    # Convert legacy string to object
-                                    index = suggestions.index(s)
-                                    suggestions[index] = {"text": new_text, "done": False, "time": new_time if new_time is not None else 0}
-                                updated = True
-                                break
-                        
-                        if updated:
-                            query = "UPDATE tasks SET ai_suggestion = %s WHERE id = %s AND user_id = %s"
-                            cursor.execute(query, (json.dumps(suggestions), task_id, user_id))
-                            conn.commit()
-                            return True
-            except (Error, json.JSONDecodeError) as e:
-                print(f"Error editing AI item: {e}")
-            finally:
-                cursor.close()
-                conn.close()
+        ctask = CTask(user_id, task_id)
+        if ctask.fields:
+            return ctask.edit_ai_suggestion(old_text, new_text, new_time)
         return False
 
     def hide_task(self, user_id, task_id, duration_str):
-        """Make a task invisible until a certain time based on duration_str."""
+        """Hide task for a certain duration."""
         import datetime
-        
-        now = datetime.datetime.now()
-        hide_until = None
-        
-        if duration_str == '1 day':
-            hide_until = now + datetime.timedelta(days=1)
-        elif duration_str == '2 days':
-            hide_until = now + datetime.timedelta(days=2)
-        elif duration_str == '3 days':
-            hide_until = now + datetime.timedelta(days=3)
-        elif duration_str == '1 week':
-            hide_until = now + datetime.timedelta(weeks=1)
-        elif duration_str == '2 weeks':
-            hide_until = now + datetime.timedelta(weeks=2)
-        elif duration_str == '1 month':
-            # Simplified month Calculation (30 days)
-            hide_until = now + datetime.timedelta(days=30)
-        
-        if not hide_until:
-            return False
-            
         conn = get_db_connection()
         if conn:
             try:
                 cursor = conn.cursor()
+                now = datetime.datetime.now()
+                hide_until = now
+                if duration_str == '1h':
+                    hide_until = now + datetime.timedelta(hours=1)
+                elif duration_str == 'tomorrow':
+                    hide_until = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(days=1, hours=8)
+                elif duration_str == 'next_week':
+                    hide_until = now + datetime.timedelta(days=7)
+                
                 query = "UPDATE tasks SET hide_until = %s WHERE id = %s AND user_id = %s"
                 cursor.execute(query, (hide_until, task_id, user_id))
                 conn.commit()
                 return True
             except Error as e:
                 print(f"Error hiding task: {e}")
-                return False
+            finally:
+                cursor.close()
+                conn.close()
+        return False
+
+    def toggle_task_folding(self, user_id, task_id):
+        """Toggle the is_folded state of a task."""
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                query = "UPDATE tasks SET is_folded = 1 - is_folded WHERE id = %s AND user_id = %s"
+                cursor.execute(query, (task_id, user_id))
+                conn.commit()
+                return True
+            except Error as e:
+                print(f"Error toggling task folding: {e}")
             finally:
                 cursor.close()
                 conn.close()

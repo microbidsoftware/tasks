@@ -89,3 +89,71 @@ ERROR: There is some error with the implementation of the filters.
 1)  When I log first time, I see a lot of tasks including those tasks that were added some time before, even before date a field was added. Basically I see all the task. 
 This view, theoretically, should not be changed if I select all in a period selection, but practically selecting all has only very few records with today and tomorrow, and definitely doesn't show all of the records.
 2) there is another problem with the selection of next week. Next week means that not the current week but the next one. Still, when I click on that, it shows today and tomorrow's events.
+
+
+
+add to calss CTask funcition get_full_task_structure_json, that will return JSON for current task in that format. {
+  "id": "T1",
+  "title": "Find replacement battery for dad's drill",
+  "subtasks": [
+    {
+      "id": "S1",
+      "title": "Research compatible battery types",
+      "subtasks": [
+        {
+          "id": "S1-1",
+          "title": "Check Walmart",
+          "subtasks": [
+            {
+              "id": "S1-1-1",
+              "title": "Search online inventory",
+              "subtasks": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Note, that the task might be not of a parent level, but subtask on any level, but the function still should return  full JSON, for the whole branch
+get_full_task_structure_json method in the CTask class.
+
+Recursive Logic: The function automatically identifies the root task of the current branch and builds a full nested JSON structure.
+Complete Branch: It includes all subtasks and their descendants, regardless of whether you instantiate CTask at the root, middle, or leaf of the branch.
+
+
+Make a small triangle for each task to specify if it's folded or expanded. 
+Keep it in the same line as the task title, on the left side.
+When clicked, it should toggle the folded/expanded state of the task and its subtasks - just one level. 
+When folded, the subtasks should not be displayed.
+When expanded, the subtasks should be displayed.
+Keep this status in the database, and restore it when the page is reloaded.
+
+
+modify database to add two fields to tasks table: 
+1) field level will be integer, and will store the level of the task in the tree structure, starting from 0 for the root tasks
+2) field branch_id will be string, and will store the id of the branch, to which the task belongs. for the parent task, branch_id will be the same as id of the task
+but for subtasks, branch_id will be the same as id of the parent task
+
+
+In the left menu of Periods make  following changes:
+Today first and default period
+Add option This week.
+Make option All - last one
+
+Currently, when the subtask is created from suggestion step, i.g. when button Save, clicked and  subtask created from suggestion, the original suggestion stays as it is. It should disappear immediately. 
+
+when I am adding a task to being in Today period. e.g. - when Today is selected in the left menu   - this task should be added to today's list, and not to the list of all tasks, to do so yet before adding pre-define date of the task as of today (if  user changes it, than it should behave according to the time set)
+The same principle applies to Tomorrow and next week periods - while for next week next Monday should be pre-selected.
+
+When I am adding a subtask to a task, that task should be added to the same period as the parent task.  
+E.g. if task is set for 22 June 2026, than subtask should be added to the same period, i.e. to 22 June 2026. Of course, if user changes it, than it should behave according to the time set
+
+
+1) In the display of the task, for all tasks except completed, Disregarding the level, the date including the icon of the clock should be clickable and to open a 
+dialogue windows that sets sets a date and a time. 
+2) In that windows that sets a sets a date and a time, make  button on the top [Today]  that will shift the date on today, and will update the date in the dialogue window, immediately
+closing it after clcking. (Not save button click needed in case of using the button)
+3) In that window also s that sets a date and a time, make  buttons on the top [+1] and [+7] [+1M] that will shift the date by +1 day and +7 and  days and 1 months accordingly, and will update the date in the dialogue window, immediately
+closing it after clcking. (Not save button click needed in case of using these buttons)

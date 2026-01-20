@@ -36,12 +36,17 @@ initialize_database()
 def index():
     user = session.get('user')
     if not user:
-        return render_template('index.html', user=None, tasks=[])
+        default_stats = {
+            'total_time': 0,
+            'importance_summary': {'Important': 0, 'Medium': 0, 'Normal': 0},
+            'tag_summary': {}
+        }
+        return render_template('index.html', user=None, tasks=[], stats=default_stats)
     
     search_query = request.args.get('q')
     tag_filter = request.args.get('tag')
     importance_filter = request.args.get('importance')
-    period_filter = request.args.get('period')
+    period_filter = request.args.get('period', 'today')
     
     tasks_tree, stats = manager.list_tasks(user['id'], search_query, tag_filter, importance_filter, period_filter)
     
@@ -97,12 +102,13 @@ def add_task_route():
     description = request.form.get('description')
     run_ai = request.form.get('run_ai', 'true') != 'false'
     due_at = request.form.get('due_at')
+    from_suggestion_text = request.form.get('from_suggestion_text')
     
     if not due_at:
         due_at = None
 
     if title:
-        manager.add_task(user['id'], title, parent_id, time_minutes, importance, description, run_ai=run_ai, due_at=due_at)
+        manager.add_task(user['id'], title, parent_id, time_minutes, importance, description, run_ai=run_ai, due_at=due_at, from_suggestion_text=from_suggestion_text)
     return redirect(url_for('index'))
 
 @app.route('/update_task', methods=['POST'])
@@ -149,6 +155,15 @@ def uncomplete_task(task_id):
         
     manager.uncomplete_task(user['id'], task_id)
     return redirect(url_for('index'))
+
+@app.route('/toggle_folding/<int:task_id>')
+def toggle_folding(task_id):
+    user = session.get('user')
+    if not user:
+        return {"success": False}, 401
+    
+    success = manager.toggle_task_folding(user['id'], task_id)
+    return {"success": success}
 
 @app.route('/clear_suggestion/<int:task_id>')
 def clear_suggestion(task_id):

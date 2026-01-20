@@ -29,8 +29,8 @@ class AIService:
             sys.stdout.flush()
             self.client = None
 
-    def get_task_suggestion(self, task_title):
-        """Ask OpenAI for a short suggestion/breakdown for the task."""
+    def get_task_suggestion(self, task_title, branch_context=None, current_leaf_title=None):
+        """Ask OpenAI for a short suggestion/breakdown for the task, considering context."""
         if not self.client:
             print("OpenAI request skipped: Client not initialized.")
             sys.stdout.flush()
@@ -40,7 +40,13 @@ class AIService:
             print(f"Sending OpenAI request for task: '{task_title}'")
             sys.stdout.flush()
             
-            prompt = f"I am planning a task: '{task_title}'. Provide 3-5 short, actionable sub-steps or pieces of advice to resolve this task. Think deeply, try to use NLP systems and methods to improve results make it's motivational oriented, emphesize easiness of the step and make the task more attractive to start and easy to fulfill take into account the context of the task and you can include obvious or trivial steps. Return a JSON object with a key 'suggested_subtasks' which is an array of objects, each containing 'text' (under 30 words) and 'estimated_time' (in minutes, as an integer)."
+            context_str = ""
+            if branch_context:
+                context_str = f"Context of the task branch: {branch_context}. "
+            if current_leaf_title:
+                context_str += f"Current subtask being created: {current_leaf_title}. "
+
+            prompt = f"I am planning a task: '{task_title}'. {context_str}Provide 3-5 short, actionable sub-steps or pieces of advice to resolve this task. Think deeply, try to use NLP systems and methods to improve results make it's motivational oriented, emphesize easiness of the step and make the task more attractive to start and easy to fulfill take into account the context of the task and you can include obvious or trivial steps. Return a JSON object with a key 'suggested_subtasks' which is an array of objects, each containing 'text' (under 30 words) and 'estimated_time' (in minutes, as an integer)."
             print(f"Prompt: {prompt}")
             sys.stdout.flush()
             

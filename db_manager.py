@@ -60,6 +60,9 @@ def initialize_database():
             completed_at TIMESTAMP NULL,
             due_at TIMESTAMP NULL,
             user_id INT,
+            is_folded INT DEFAULT 0,
+            level INT DEFAULT 0,
+            branch_id VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -126,6 +129,24 @@ def initialize_database():
         if not cursor.fetchone():
             print("Adding due_at column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN due_at TIMESTAMP NULL")
+
+        # Check if is_folded column exists (migration 7)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'is_folded'")
+        if not cursor.fetchone():
+            print("Adding is_folded column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN is_folded INT DEFAULT 0")
+
+        # Check if level column exists (migration 8)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'level'")
+        if not cursor.fetchone():
+            print("Adding level column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN level INT DEFAULT 0")
+
+        # Check if branch_id column exists (migration 9)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'branch_id'")
+        if not cursor.fetchone():
+            print("Adding branch_id column to tasks table...")
+            cursor.execute("ALTER TABLE tasks ADD COLUMN branch_id VARCHAR(255)")
 
         conn.commit()
         print("Database and tables initialized successfully.")

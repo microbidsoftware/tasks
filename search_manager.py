@@ -74,10 +74,15 @@ class SearchManager:
                         next_week_start = today_start + timedelta(days=days_to_next_monday)
                         next_week_end = next_week_start + timedelta(days=7)
 
+                        # "This week" means next 7 days
+                        seven_days_later = now + timedelta(days=7)
+
                         if effective_period == 'today':
                             if not (due_at < tomorrow_start): match = False
                         elif effective_period == 'tomorrow':
                             if not (tomorrow_start <= due_at < day_after_tomorrow): match = False
+                        elif effective_period == 'this_week':
+                            if not (now <= due_at < seven_days_later): match = False
                         elif effective_period == 'next_week':
                             if not (next_week_start <= due_at < next_week_end): match = False
 
