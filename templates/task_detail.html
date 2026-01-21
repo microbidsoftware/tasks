@@ -40,8 +40,9 @@
         <div style="margin-bottom: 20px;">
 
             {# Use the macro specifically for the row controls (status, menu, badges) #}
+            {# Use the macro specifically for the row controls (status, menu, badges) #}
             <div class="main-task-row-container"
-                style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                 {{ render_task_row(task, 0) }}
 
                 {# Hidden Form for Date Picker (REQUIRED for calendar.js) #}
@@ -68,17 +69,22 @@
                    User said "Move next to it all the buttons...". Checkbox is usually left of title. 
                    I will leave checkbox unless asked to remove.
                 */
+
+                /* Custom Quill Overrides for "No Frame" look */
+                .ql-container.ql-snow {
+                    border: none !important;
+                }
             </style>
 
             {# Detailed Description #}
-            {% if task.description %}
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #666; font-size: 0.9em; text-transform: uppercase;">Description</h3>
-                <div
-                    style="white-space: pre-wrap; color: #444; background: #f8f9fa; padding: 15px; border-radius: 4px;">
-                    {{ task.description }}</div>
+            {# Detailed Description (Rich Text Editor) #}
+            <div style="margin-bottom: 20px; position: relative;">
+                <span id="save-status"
+                    style="font-size: 0.8em; display: none; position: absolute; top: -20px; right: 0;">Saving...</span>
+                <!-- Quill Editor Container -->
+                <div id="task-description-editor" style="height: 200px; font-size: 16px;">{{ task.description | safe if
+                    task.description else '' }}</div>
             </div>
-            {% endif %}
 
             {# AI Suggestions #}
             {% if task.ai_suggestion %}
@@ -139,5 +145,18 @@
     // Global variable for calendar.js (if we want to use defaults in detail view too, though sidebar periods link to index)
     // We can just pass the period or default to 'today'
     window.globalCurrentPeriod = "{{ current_period or 'today' }}";
+
+    // Initialize Quill Editor
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof DescriptionEditor !== 'undefined') {
+            DescriptionEditor.init('{{ task.id }}');
+        }
+    });
 </script>
+<!-- Quill Styles -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<!-- Quill JS and Image Resize Module -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
+<script src="{{ url_for('static', filename='js/description_editor.js') }}"></script>
 {% endblock %}

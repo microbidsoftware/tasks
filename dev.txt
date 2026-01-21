@@ -207,3 +207,12 @@ In the Single Task View, make the following changes:
 1) Delete title Subtasks
 2) Delete text No subtasks yet. - if not subtasks are added.
 3) Make title of main task red. Move next to it all the buttons that are present next to the title of the main task in the list of tasks.
+
+
+In Single Task View page:
+Below the caption line in the main task, we have the description of the task. 
+The description should be editable in place, and when user clicks on the description, it should be an area that I can click and immediately start edit, while the changes are autosaved. 
+Also I might copy-paste pictures there that has to be saved as well, or drag and drop pictures there.
+THink about what module or software is used for this purpose and use it. 
+I would like it be as much separate from the rest of the app as possible, so it can be cnanged in case of need, without 
+interrupting the flow of other parts of the app.  

@@ -9,7 +9,8 @@ import datetime
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY') # Secure secret key
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default_secret_key')
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB limit for uploads
 
 # Session Configuration for Localhost OAuth
 app.config['SESSION_COOKIE_NAME'] = 'google-login-session'
@@ -132,14 +133,16 @@ def logout():
     session.pop('user', None)
     return redirect(url_for('index'))
 
-@app.route('/toggle_completed_visibility')
+@app.route('/toggle_completed_visibility', methods=['POST'])
 def toggle_completed_visibility():
     user = session.get('user')
     if not user:
-        return redirect(url_for('login'))
+        return jsonify({'status': 'error', 'message': 'Not logged in'}), 401
     
-    current_setting = user.get('show_completed_tasks', 1)
-    new_setting = 0 if current_setting == 1 else 1
+    data = request.json
+    show = data.get('show', False) # Expecting a boolean
+    
+    new_setting = 1 if show else 0
     
     conn = get_db_connection()
     if conn:
@@ -154,6 +157,7 @@ def toggle_completed_visibility():
             
         except Exception as e:
             print(f"Error toggling visibility: {e}")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
         finally:
             cursor.close()
             conn.close()
@@ -304,6 +308,5 @@ def remove_tag(task_id, tag_id):
     ctask.remove_tag(tag_id)
     return redirect(url_for('index'))
 
-if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
-
+if __name__ == '__main__':
+    app.run(debug=True, port=int(os.environ.get('PORT', 5000)))

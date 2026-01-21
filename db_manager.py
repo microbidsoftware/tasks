@@ -98,7 +98,28 @@ def initialize_database():
         if not cursor.fetchone():
             print("Adding user_id column to tasks table...")
             cursor.execute("ALTER TABLE tasks ADD COLUMN user_id INT")
-            cursor.execute("ALTER TABLE tasks ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE")
+            cursor.execute("ALTER TABLE tasks ADD CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE")
+
+        # Check description column type (migration 2 - Rich Text Support)
+        cursor.execute("SHOW COLUMNS FROM tasks LIKE 'description'")
+        col_info = cursor.fetchone()
+        if col_info and 'text' in col_info[1].lower() and 'longtext' not in col_info[1].lower():
+            print("Upgrading description column to LONGTEXT for image support...")
+            cursor.execute("ALTER TABLE tasks MODIFY COLUMN description LONGTEXT")
+        
+        # Original FK line seemed misplaced or redundant in migration 2 logic, restoring context or safely removing if duplicate. 
+        # Line 109 in original was `cursor.execute("ALTER TABLE tasks ADD CONSTRAINT fk_user ...")` 
+        # But wait, looking at context, line 109 was INDENTED poorly. 
+        # Also, is it needed? Migration 1 added fk_user_id. Migration 2 checks description.
+        # The line 109 `fk_user` constraint seems misplaced leftovers from a successful/failed copy-paste or previous migration logic.
+        # If I look at `initialize_database`:
+        # `create_table_query` has `FOREIGN KEY (user_id) REFERENCES users(id)`.
+        # Migration 1 adds `user_id` and `fk_user_id`.
+        # Migration 2 updates `description`. 
+        # I should probably just fix the indentation of the migration 2 block and ignoring line 109 if it's garbage, or fixing it if it was intended. 
+        # Line 109 `fk_user` seems like it might be a mistake from my previous edit. 
+        # I will REMOVE line 109 as `fk_user` constraint on `user_id` was already handled in migration 1 (as `fk_user_id`).
+        # So I will just close the if block properly.
 
         # Check if description column exists (migration 3)
         cursor.execute("SHOW COLUMNS FROM tasks LIKE 'description'")
