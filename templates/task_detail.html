@@ -135,7 +135,12 @@
                 {% endif %}
             </div>
         </div>
-    </main>
+
+        {# Hidden Forms for Menu Actions #}
+        {% from "macros.html" import render_task_forms %}
+        {{ render_task_forms(task, now) }}
+</div>
+</main>
 </div>
 {% endif %}
 {% endblock %}

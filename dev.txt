@@ -216,3 +216,12 @@ Also I might copy-paste pictures there that has to be saved as well, or drag and
 THink about what module or software is used for this purpose and use it. 
 I would like it be as much separate from the rest of the app as possible, so it can be cnanged in case of need, without 
 interrupting the flow of other parts of the app.  
+
+In the list of the tasks page and on single page task, below the task caption printed description
+1) print it in small characters, such as 9px
+2) clean it from all HTML 
+3) clicking on it on tasks list view will open this task - like clicking on the caption of the task
+
+
+1) Add a function in menu that is doing duplicate to the task or subtask - in this case the task or the subtasks which are the object of the duplicate will have a suffix "copy", while all of the subtasks of this task will be duplicated without any changes.
+2) The menu fof editing and other operations with the task doesn't work on the Single Task view, it's a bug. 

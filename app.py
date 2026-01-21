@@ -213,6 +213,15 @@ def delete_task(task_id):
     manager.delete_task(user['id'], task_id)
     return redirect(url_for('index'))
 
+@app.route('/duplicate_task/<int:task_id>')
+def duplicate_task(task_id):
+    user = session.get('user')
+    if not user:
+        return redirect(url_for('login'))
+        
+    manager.duplicate_task(user['id'], task_id)
+    return redirect(request.referrer or url_for('index'))
+
 @app.route('/complete/<int:task_id>')
 def complete_task(task_id):
     user = session.get('user')

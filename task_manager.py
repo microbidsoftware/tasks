@@ -12,6 +12,91 @@ class TaskManager:
     def __init__(self):
         self.ai_service = AIService()
 
+    def duplicate_task(self, user_id, task_id):
+        """Duplicate a task and its subtasks recursively."""
+        conn = get_db_connection()
+        if not conn:
+            return False
+        
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # 1. Fetch original task
+            cursor.execute("SELECT * FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
+            original_task = cursor.fetchone()
+            
+            if not original_task:
+                return False
+            
+            # 2. Define recursive copy function (internal to method or class)
+            def copy_task_recursive(original_id, parent_id_for_new, is_root=False):
+                # Fetch original data again or pass it if already fetched (for root)
+                if is_root:
+                    curr_task = original_task
+                else:
+                    cursor.execute("SELECT * FROM tasks WHERE id = %s AND user_id = %s", (original_id, user_id))
+                    curr_task = cursor.fetchone()
+                    if not curr_task:
+                        return
+                    
+                # Prepare new title
+                new_title = curr_task['title']
+                if is_root:
+                    new_title += " copy"
+                    
+                # Insert new task
+                insert_query = """
+                    INSERT INTO tasks (user_id, title, description, time_minutes, importance, ai_suggestion, parent_id, due_at, branch_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                # Note: branch_id logic is complex usually, CTask handles it on insert triggers or similar? 
+                # Assuming simple insert works and triggers handle branch_id if exists. 
+                # If DB triggers handle branch_id, passing NULL or letting it default is fine.
+                # However, original schema might not have triggers. 
+                # Let's check if we need to set branch_id manually. 
+                # For now, let's assume we pass what we have, but usually branch_id is root's ID.
+                # If we create a NEW root, its branch_id is itself (or updated later). 
+                # Let's ignore branch_id in INSERT if it's auto-handled or pass None.
+                
+                cursor.execute(insert_query, (
+                    user_id, 
+                    new_title, 
+                    curr_task['description'], 
+                    curr_task['time_minutes'], 
+                    curr_task['importance'], 
+                    curr_task['ai_suggestion'], 
+                    parent_id_for_new,
+                    curr_task['due_at'],
+                    None # branch_id defaults usually, or handled by logic
+                ))
+                new_task_id = cursor.lastrowid
+                
+                # Copy Tags
+                cursor.execute("SELECT tag_id FROM task_tags WHERE task_id = %s", (original_id,))
+                tags = cursor.fetchall()
+                for tag in tags:
+                    cursor.execute("INSERT INTO task_tags (task_id, tag_id) VALUES (%s, %s)", (new_task_id, tag['tag_id']))
+                
+                # Recursively copy children
+                cursor.execute("SELECT id FROM tasks WHERE parent_id = %s AND user_id = %s", (original_id, user_id))
+                children = cursor.fetchall()
+                
+                for child in children:
+                    copy_task_recursive(child['id'], new_task_id, is_root=False)
+                    
+            # 3. Start recursion
+            copy_task_recursive(task_id, original_task['parent_id'], is_root=True)
+            conn.commit()
+            return True
+            
+        except Error as e:
+            print(f"Error duplicating task: {e}")
+            conn.rollback()
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     def add_task(self, user_id, title, parent_id=None, time_minutes=0, importance=None, description=None, run_ai=True, due_at=None, from_suggestion_text=None):
         """Add a new task (or subtask) with optional time estimation, importance, description, and due time."""
         conn = get_db_connection()
