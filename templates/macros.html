@@ -76,8 +76,8 @@
         style="font-size: 0.8em; color: #856404; background: #fff3cd; border: 1px solid #ffeeba; {% if task.status != 'completed' %}cursor: pointer;{% endif %}"
         title="Due at" data-due-at="{{ task.due_at.isoformat() if task.due_at is not string else task.due_at }}" {% if
         task.status !='completed' %}
-        onclick="openTimeSetDialog('{{ task.id }}', undefined, true); event.stopPropagation();" {% endif %}> 🕐 <span
-            class="due-display-text"></span>
+        onclick="openTimeSetDialog('{{ task.id }}', undefined, true, {{ 'true' if task.children else 'false' }}); event.stopPropagation();"
+        {% endif %}> 🕐 <span class="due-display-text"></span>
     </span>
     {% endif %}
 
@@ -181,12 +181,14 @@
         <input type="hidden" name="due_at" id="due-at-{{ task.id }}"
             value="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}">
         <input type="text" name="title" value="{{ task.title }}" required style="width: 200px;">
-        <button type="button" class="icon-btn" onclick="openTimeSetDialog('{{ task.id }}')" title="Set Due Time">
+        <button type="button" class="icon-btn"
+            onclick="openTimeSetDialog('{{ task.id }}', undefined, false, {{ 'true' if task.children else 'false' }})"
+            title="Set Due Time">
             🕐
         </button>
         <span id="due-preview-{{ task.id }}" class="due-preview"
             data-due-at="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}"
-            onclick="openTimeSetDialog('{{ task.id }}')"
+            onclick="openTimeSetDialog('{{ task.id }}', undefined, false, {{ 'true' if task.children else 'false' }})"
             style="font-size: 0.85em; color: #856404; background: #fff3cd; border-radius: 4px; padding: 4px 8px; margin-left: 2px; cursor: pointer; border: 1px solid #ffeeba; display: none;">
             <span class="due-preview-text"></span>
         </span>

@@ -10,7 +10,7 @@ let selectedDateStr = "";
 // Best practice: The calling template should set a global or pass it to an init function.
 // For this refactor, we will read it from a global variable `globalCurrentPeriod` if set.
 
-function openTimeSetDialog(id, explicitValue, autoSave = false) {
+function openTimeSetDialog(id, explicitValue, autoSave = false, hasSubtasks = false) {
     currentAutoSave = autoSave;
     currentTargetInputId = 'due-at-' + id;
     const targetInput = document.getElementById(currentTargetInputId);
@@ -18,6 +18,19 @@ function openTimeSetDialog(id, explicitValue, autoSave = false) {
 
     const dialog = document.getElementById('task-time-set-dialog');
     const timeInput = document.getElementById('due-time-input');
+
+    // Handle shift-subtasks checkbox
+    const shiftSubtasksContainer = document.getElementById('shift-subtasks-container');
+    const shiftSubtasksCheckbox = document.getElementById('shift-subtasks-checkbox');
+    if (shiftSubtasksContainer && shiftSubtasksCheckbox) {
+        if (hasSubtasks) {
+            shiftSubtasksContainer.style.display = 'flex';
+            shiftSubtasksCheckbox.checked = true;
+        } else {
+            shiftSubtasksContainer.style.display = 'none';
+            shiftSubtasksCheckbox.checked = false;
+        }
+    }
 
     if (currentValue) {
         let d;
@@ -108,6 +121,9 @@ function saveTimeSet() {
     const previewId = targetInputId.replace('due-at-', 'due-preview-');
     const previewSpan = document.getElementById(previewId);
 
+    const shiftSubtasksCheckbox = document.getElementById('shift-subtasks-checkbox');
+    const doShift = shiftSubtasksCheckbox ? shiftSubtasksCheckbox.checked : false;
+
     let finalValue = "";
     if (selectedDateStr && timeInput) {
         finalValue = selectedDateStr + ' ' + timeInput + ':00';
@@ -127,6 +143,22 @@ function saveTimeSet() {
     }
 
     if (currentAutoSave && targetInput && targetInput.form) {
+        // Add hidden field for shift_subtasks if true
+        if (doShift) {
+            let hiddenInput = targetInput.form.querySelector('input[name="shift_subtasks"]');
+            if (!hiddenInput) {
+                hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'shift_subtasks';
+                targetInput.form.appendChild(hiddenInput);
+            }
+            hiddenInput.value = 'true';
+        } else {
+            let hiddenInput = targetInput.form.querySelector('input[name="shift_subtasks"]');
+            if (hiddenInput) {
+                hiddenInput.value = 'false';
+            }
+        }
         targetInput.form.submit();
     }
 

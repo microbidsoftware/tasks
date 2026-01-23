@@ -302,6 +302,15 @@ class TaskManager:
                 if not task:
                     return None, []
 
+                # Fetch tags for the main task
+                cursor.execute("""
+                    SELECT t.id, t.name 
+                    FROM tags t
+                    JOIN task_tags tt ON t.id = tt.tag_id
+                    WHERE tt.task_id = %s
+                """, (task_id,))
+                task['tags'] = cursor.fetchall()
+
                 # Parse AI Suggestion
                 if task.get('ai_suggestion'):
                     try:
@@ -323,6 +332,21 @@ class TaskManager:
                 """
                 cursor.execute(query_all, (user_id,))
                 all_tasks = cursor.fetchall()
+
+                # Fetch tags for all tasks to avoid N+1
+                cursor.execute("""
+                    SELECT tt.task_id, t.id, t.name 
+                    FROM tags t
+                    JOIN task_tags tt ON t.id = tt.tag_id
+                    WHERE t.user_id = %s
+                """, (user_id,))
+                all_tags_raw = cursor.fetchall()
+                task_tags_map = {}
+                for row in all_tags_raw:
+                    tid = row['task_id']
+                    if tid not in task_tags_map:
+                        task_tags_map[tid] = []
+                    task_tags_map[tid].append({'id': row['id'], 'name': row['name']})
                 
                 # Parse JSON for all
                 import json
@@ -337,6 +361,7 @@ class TaskManager:
                 tasks_map = {t['id']: t for t in all_tasks}
                 for t in all_tasks:
                     t['children'] = []
+                    t['tags'] = task_tags_map.get(t['id'], [])
                     
                 # Build Tree
                 root_children = []
@@ -476,19 +501,21 @@ class TaskManager:
                 conn.close()
         return False
 
-    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None, description=None, due_at=None):
-        """Update a task's details."""
+    def update_task(self, user_id, task_id, title=None, time_minutes=None, importance=None, description=None, due_at=None, shift_subtasks=False):
+        """Update a task's details and optionally shift subtasks."""
         conn = get_db_connection()
         if conn:
             try:
-                cursor = conn.cursor()
+                cursor = conn.cursor(dictionary=True)
                 
-                # Check exist
-                check_query = "SELECT id, title, time_minutes FROM tasks WHERE id = %s AND user_id = %s"
+                # Check exist and get old due_at
+                check_query = "SELECT id, title, time_minutes, due_at FROM tasks WHERE id = %s AND user_id = %s"
                 cursor.execute(check_query, (task_id, user_id))
                 row = cursor.fetchone()
                 if not row:
                     return False
+                
+                old_due_at = row['due_at']
                 
                 # Prepare update
                 updates = []
@@ -509,6 +536,16 @@ class TaskManager:
                     params.append(importance)
 
                 if description is not None:
+                    # Extract tags from description
+                    desc_tags = extract_tags_from_text(description)
+                    if desc_tags:
+                        tags_to_add.extend(desc_tags)
+                    
+                    # Clean description (remove hashtags)
+                    # We use a simple regex here to avoid breaking HTML structure
+                    import re
+                    description = re.sub(r'#[\w-]+', '', description)
+                    
                     updates.append("description = %s")
                     params.append(description)
                 
@@ -520,6 +557,7 @@ class TaskManager:
                     except (ValueError, TypeError):
                         pass
 
+                new_due_at_obj = None
                 if due_at is not None:
                     # Expecting due_at to be a string in ISO format or None to clear
                     if due_at == '':
@@ -527,6 +565,15 @@ class TaskManager:
                     else:
                         updates.append("due_at = %s")
                         params.append(due_at)
+                        # Parse for shifting
+                        try:
+                            import datetime
+                            if isinstance(due_at, str):
+                                new_due_at_obj = datetime.datetime.fromisoformat(due_at.replace(' ', 'T'))
+                            else:
+                                new_due_at_obj = due_at
+                        except Exception as e:
+                            print(f"Error parsing new due_at: {e}")
 
                 if not updates:
                     return True
@@ -534,8 +581,60 @@ class TaskManager:
                 params.append(task_id)
                 query = f"UPDATE tasks SET {', '.join(updates)} WHERE id = %s"
                 
+                cursor.close()
+                cursor = conn.cursor()
                 cursor.execute(query, tuple(params))
                 conn.commit()
+
+                # Recursive Shifting if requested
+                if shift_subtasks and old_due_at and new_due_at_obj:
+                    # Calculate delta
+                    try:
+                        import datetime
+                        if isinstance(old_due_at, str):
+                            old_due_at_obj = datetime.datetime.fromisoformat(old_due_at.replace(' ', 'T'))
+                        else:
+                            old_due_at_obj = old_due_at
+                        
+                        delta = new_due_at_obj - old_due_at_obj
+                        
+                        if delta.total_seconds() != 0:
+                            # Fetch all descendants recursively
+                            cursor.execute("SELECT id, parent_id, due_at FROM tasks WHERE user_id = %s", (user_id,))
+                            all_nodes = cursor.fetchall()
+                            
+                            # Build children map
+                            children_map = {}
+                            due_at_map = {}
+                            for tid, pid, d_at in all_nodes:
+                                due_at_map[tid] = d_at
+                                if pid:
+                                    if pid not in children_map: children_map[pid] = []
+                                    children_map[pid].append(tid)
+
+                            # BFS/DFS to find all descendants
+                            descendants = []
+                            queue = children_map.get(int(task_id), [])
+                            while queue:
+                                curr = queue.pop(0)
+                                descendants.append(curr)
+                                queue.extend(children_map.get(curr, []))
+
+                            # Update each descendant that has a due_at
+                            for tid in descendants:
+                                curr_due = due_at_map.get(tid)
+                                if curr_due:
+                                    if isinstance(curr_due, str):
+                                        curr_due_obj = datetime.datetime.fromisoformat(curr_due.replace(' ', 'T'))
+                                    else:
+                                        curr_due_obj = curr_due
+                                    
+                                    shifted_due = curr_due_obj + delta
+                                    cursor.execute("UPDATE tasks SET due_at = %s WHERE id = %s", (shifted_due, tid))
+                            
+                            conn.commit()
+                    except Exception as e:
+                        print(f"Error shifting subtasks: {e}")
 
                 # Handle Tags
                 if tags_to_add:

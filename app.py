@@ -198,9 +198,10 @@ def update_task_route():
     importance = request.form.get('importance')
     description = request.form.get('description')
     due_at = request.form.get('due_at')
+    shift_subtasks = request.form.get('shift_subtasks') == 'true'
     
     if task_id:
-        manager.update_task(user['id'], task_id, title, time_minutes, importance, description, due_at=due_at)
+        manager.update_task(user['id'], task_id, title, time_minutes, importance, description, due_at=due_at, shift_subtasks=shift_subtasks)
         
     return redirect(url_for('index'))
 

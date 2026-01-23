@@ -225,3 +225,18 @@ In the list of the tasks page and on single page task, below the task caption pr
 
 1) Add a function in menu that is doing duplicate to the task or subtask - in this case the task or the subtasks which are the object of the duplicate will have a suffix "copy", while all of the subtasks of this task will be duplicated without any changes.
 2) The menu fof editing and other operations with the task doesn't work on the Single Task view, it's a bug. 
+
+
+Let's make additional functions in setTimeDialog. 
+This additional function will work with subtasks. In the dialog make a checkbox "Shift subetask as well". It will be checked by default if the current task has any subtasks. 
+If the checkbox is checked, then all subtasks will be shifted by the same amount of time as the main task. 
+If the checkbox is unchecked, then only the main task will be shifted. 
+
+In A single task viewer. There is a rich text editor from Quill, but it doesn't have a toolbar, and sometimes we do need a toolbar.
+Place next to the rich editor on the right side at the top. Right corner of the editor, or maybe outside of the editor which is easier. A small button that will turn off and turn down the toolbar of the editor. 
+
+Let's make two changes with tags:
+1. Currently, tags are displayed next to the title of the task in the task list, but when we open the single task page, it doesn't display tags. 
+Add it there too, so it will be consistent.
+2. Tags can also be added in the description. 
+If they're added to the description field, do the same as you made with the title - identify them in the body, assign to the task and remove them from the body after parsing. 

@@ -23,7 +23,13 @@ const DescriptionEditor = {
                 imageResize: {
                     displaySize: true
                 },
-                toolbar: false // User requested to hide toolbar
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
             }
         });
 
@@ -207,5 +213,13 @@ const DescriptionEditor = {
                     statusEl.style.display = 'inline';
                 }
             });
+    },
+
+    toggleToolbar: function () {
+        const wrapper = document.getElementById('task-description-wrapper');
+        if (wrapper) {
+            wrapper.classList.toggle('show-toolbar');
+            console.log('Toolbar toggled:', wrapper.classList.contains('show-toolbar'));
+        }
     }
 };

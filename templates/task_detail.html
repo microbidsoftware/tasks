@@ -52,6 +52,19 @@
                         value="{{ task.due_at.isoformat() if task.due_at and task.due_at is not string else task.due_at if task.due_at else '' }}">
                     <input type="hidden" name="title" value="{{ task.title }}">
                 </form>
+
+                {# Tags for Main Task #}
+                <div id="main-task-tags" style="display: flex; gap: 5px; flex-wrap: wrap; margin-left: 10px;">
+                    {% if task.tags %}
+                    {% for tag in task.tags %}
+                    <span class="tag-badge">
+                        {{ tag.name }}
+                        <a href="{{ url_for('remove_tag', task_id=task.id, tag_id=tag.id) }}" class="tag-remove"
+                            title="Remove tag">x</a>
+                    </span>
+                    {% endfor %}
+                    {% endif %}
+                </div>
             </div>
 
             <style>
@@ -74,13 +87,69 @@
                 .ql-container.ql-snow {
                     border: none !important;
                 }
+
+                /* Toolbar Toggle Styles */
+                .toolbar-toggle-btn {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    z-index: 1001;
+                    background: #f8f9fa;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    padding: 2px 6px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    color: #555;
+                    opacity: 0.3;
+                    transition: opacity 0.2s, background 0.2s;
+                }
+
+                .toolbar-toggle-btn:hover {
+                    opacity: 1;
+                    background: #e9ecef;
+                }
+
+                #task-description-wrapper .ql-toolbar.ql-snow {
+                    display: none;
+                    border: none;
+                    border-bottom: 1px solid #eee;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    z-index: 1000;
+                }
+
+                #task-description-wrapper.show-toolbar .ql-toolbar.ql-snow {
+                    display: block;
+                }
+
+                #task-description-wrapper.show-toolbar .ql-container.ql-snow {
+                    padding-top: 40px;
+                    /* Space for toolbar */
+                }
+
+                #task-description-wrapper.show-toolbar .toolbar-toggle-btn {
+                    opacity: 1;
+                    background: #007bff;
+                    color: white;
+                    border-color: #007bff;
+                }
             </style>
 
             {# Detailed Description #}
             {# Detailed Description (Rich Text Editor) #}
-            <div style="margin-bottom: 20px; position: relative;">
+            <div id="task-description-wrapper"
+                style="margin-bottom: 20px; position: relative; border: 1px solid transparent; transition: border 0.2s;">
                 <span id="save-status"
-                    style="font-size: 0.8em; display: none; position: absolute; top: -20px; right: 0;">Saving...</span>
+                    style="font-size: 0.8em; display: none; position: absolute; top: -20px; right: 0; z-index: 1002;">Saving...</span>
+
+                <!-- Toolbar Toggle Button -->
+                <button type="button" class="toolbar-toggle-btn" onclick="DescriptionEditor.toggleToolbar()"
+                    title="Toggle Toolbar">✎</button>
+
                 <!-- Quill Editor Container -->
                 <div id="task-description-editor" style="height: 200px; font-size: 16px;">{{ task.description | safe if
                     task.description else '' }}</div>
